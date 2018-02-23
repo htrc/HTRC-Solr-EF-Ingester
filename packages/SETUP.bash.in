@@ -1,0 +1,8 @@
+
+export HTRC_EF_HOME=`pwd`
+
+export PATH="$HTRC_EF_HOME/hadoop-2.7.3/bin:$HTRC_EF_HOME/spark-2.0.1-bin-hadoop2.7/bin:$HTRC_EF_HOME/spark-2.0.1-bin-hadoop2.7/sbin:$PATH"
+
+#export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/
+# and then add to path?
+

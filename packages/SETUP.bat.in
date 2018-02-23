@@ -1,0 +1,9 @@
+@echo off
+
+:: If not already set, uncomment JAVA_HOME line below and set to appropriate value for your system
+
+set HTRC_EF_HOME=%CD%
+
+set "PATH=%HTRC_EF_HOME%\apache-maven-3.3.9\bin;%HTRC_EF_HOME%\hadoop-2.7.3\bin;%HTRC_EF_HOME%\spark-2.0.1-bin-hadoop2.7\bin;%PATH%"
+
+::set JAVA_HOME=C:\PROGRA~1\Java\JDK18~1.0_9

@@ -1,0 +1,141 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>HTRC Extracted Features Solr Ingest</name>
+  <url>analytics.hathitrust.org</url>
+  <groupId>org.hathitrust</groupId>
+  <artifactId>htrc-ef-ingest</artifactId>
+  <version>0.9</version>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_2.11</artifactId>
+      <version>2.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>2.12.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>3.4.1</version>
+    </dependency>
+<!--
+    <dependency>
+      <groupId>org.mongodb.spark</groupId>
+      <artifactId>mongo-spark-connector_2.10</artifactId>
+      <version>0.1</version>
+    </dependency>
+-->
+
+    <!--
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>2.7.1</version>
+    </dependency>
+    -->
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.10</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20160212</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+      <version>1.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>20.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-analyzers-icu</artifactId>
+      <version>6.3.0</version>
+    </dependency>
+
+  </dependencies>
+
+
+   <build>
+     <plugins>
+       <plugin>
+	 <groupId>org.apache.maven.plugins</groupId>
+	 <artifactId>maven-compiler-plugin</artifactId>
+	 <version>2.3.2</version>
+	 <configuration>
+	   <source>1.8</source>
+	   <target>1.8</target>
+
+	 </configuration>
+       </plugin>
+
+       <plugin>
+	 <groupId>org.apache.maven.plugins</groupId>
+	 <artifactId>maven-shade-plugin</artifactId>
+	 <version>2.4.3</version>
+	 <configuration>
+	   <relocations>
+	     <relocation>
+	       <pattern>com.google.common</pattern>
+	       <shadedPattern>org.hathitrust.google.common</shadedPattern>
+	     </relocation>
+	   </relocations>
+	 </configuration>
+	 <executions>
+	   <execution>
+	     <phase>package</phase>
+	     <goals>
+	       <goal>shade</goal>
+	     </goals>
+
+	 <configuration>
+	   <archive>
+	     <manifest>
+               <mainClass>org.hathitrust.extractedfeatures.ProcessForSolrIngest</mainClass>
+	     </manifest>
+	   </archive>
+	   <filters>
+	     <filter>
+	       <artifact>*:*</artifact>
+	       <excludes>
+		 <exclude>META-INF/*.SF</exclude>
+		 <exclude>META-INF/*.DSA</exclude>
+		 <exclude>META-INF/*.RSA</exclude>
+	       </excludes>
+	     </filter>
+	   </filters>
+
+	   <finalName>${project.artifactId}-${project.version}-jar-with-dependencies</finalName>
+
+	 </configuration>
+
+	   </execution>
+	 </executions>
+       </plugin>
+     </plugins>
+   </build>
+  
+</project>
