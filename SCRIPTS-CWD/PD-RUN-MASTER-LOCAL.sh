@@ -8,5 +8,5 @@ output_dir="file://`pwd`/pd-solr-json-files"
 
 master_opt="--master local[4]"
 
-. scripts/_RUN.sh 
+. SCRIPTS-CWD/_RUN.sh 
 

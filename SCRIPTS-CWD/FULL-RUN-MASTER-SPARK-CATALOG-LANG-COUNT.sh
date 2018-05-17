@@ -15,5 +15,5 @@ master_opt="--driver-memory 30g --executor-memory 50g --master spark://$SPARK_MA
 
 classmain="org.hathitrust.extractedfeatures.ProcessForCatalogLangCount"
 
-. scripts/_RUN.sh
+. SCRIPTS-CWD/_RUN.sh
 

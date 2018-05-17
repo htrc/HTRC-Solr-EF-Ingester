@@ -16,5 +16,5 @@ master_opt="--executor-memory 10g --conf spark.executor.extraJavaOptions=-XX:+He
 
 classmain="org.hathitrust.extractedfeatures.ProcessForLangCount"
 
-. scripts/_RUN.sh
+. SCRIPTS-CWD/_RUN.sh
 

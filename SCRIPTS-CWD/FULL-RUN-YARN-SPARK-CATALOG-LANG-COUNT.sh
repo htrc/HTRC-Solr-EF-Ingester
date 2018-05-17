@@ -18,5 +18,5 @@ master_opt="--num-executors 10 --executor-cores 4 --driver-memory 20g --executor
 
 classmain="org.hathitrust.extractedfeatures.ProcessForCatalogLangCount"
 
-. scripts/_RUN.sh
+. SCRIPTS-CWD/_RUN.sh
 

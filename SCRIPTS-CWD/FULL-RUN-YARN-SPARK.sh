@@ -21,5 +21,5 @@ solr_url="http://solr1-s:8983/solr/htrc-full-ef/update"
 #master_opt="--driver-memory 50g --executor-memory 90g --master spark://$SPARK_MASTER_HOST:7077"
 master_opt="--num-executors 33 --executor-cores 4 --driver-memory 20g --executor-memory 8g --master yarn --deploy-mode cluster"
 
-. scripts/_RUN.sh
+. SCRIPTS-CWD/_RUN.sh
 

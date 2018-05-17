@@ -16,5 +16,5 @@ solr_url="http://gc0:8983/solr/htrc-full-ef/update"
 #master_opt="--driver-memory 50g --executor-memory 12g --conf spark.executor.extraJavaOptions=-XX:+HeapDumpOnOutOfMemoryError --master spark://$SPARK_MASTER_HOST:7077"
 master_opt="--driver-memory 50g --executor-memory 70g --master spark://$SPARK_MASTER_HOST:7077"
 
-. scripts/_RUN.sh
+. SCRIPTS-CWD/_RUN.sh
 

@@ -36,5 +36,5 @@ master_opt="--num-executors 33 --executor-cores 4 --driver-memory 20g --executor
 
 classmain="org.hathitrust.extractedfeatures.ProcessForSolrIngestJSONFilelist"
 
-. scripts/_RUN.sh
+. SCRIPTS-CWD/_RUN.sh
 

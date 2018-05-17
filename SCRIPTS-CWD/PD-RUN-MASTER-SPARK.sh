@@ -11,5 +11,5 @@ solr_url="http://10.11.0.53:8983/solr/htrc-pd-ef/update"
 
 master_opt="--master spark://10.10.0.52:7077"
 
-. scripts/_RUN.sh
+. SCRIPTS-CWD/_RUN.sh
 
