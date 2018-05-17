@@ -1,30 +1,49 @@
 #!/bin/bash
 
-solr_col=TMP-faceted-htrc-fictsample-ef20
+solr_col=${1:-TMP-faceted-htrc-fictsample-ef20}
+solr_config=${2:-htrc_configs}
 
-solr_config=htrc_configs
-
-# cat file.json | \
-#   python -c "import sys, json; print json.load(sys.stdin)['name']"
-
-# http://solr1-s/solr/admin/collections?action=CREATE&name=$solr_col&numShards=4&replicationFactor=1&maxShardsPerNode=-1&collection.configName=$solr_config
-
-# Check to see if a collectcion exists:
-#
-# http://solr1-s/solr/admin/collections?action=list
-#
-#{
-#    "responseHeader":{
-#	"status":0,
-#	"QTime":5},
-#   "collections":["htrc-test",
-#		   "faceted-htrc-full-ef20",
-#		   "faceted-htrc-fictsample-ef20",
-#		   "htrc-full-ef",
-#		   "foo4",
-#		   "htrc-full-ef20",
-#		   "foo5"]}
+SOLR_NODES_ARRAY=($SOLR_NODES)
+solr_node=${SOLR_NODES_ARRAY[0]}
+solr_host=${solr_node%.*}
 
 
-nohup ./SCRIPTS-CWD/JSONLIST-RUN-YARN-SPARK.sh \
-      pair-tree-annika-1k-fiction-vol-ids.txt TMP-faceted-htrc-fictsample-ef20 &
+solr_endpoint="http://$solr_host/solr/admin"
+solr_cmd="$solr_endpoint/collections?action=list"
+
+echo ""
+echo "Checking if collection '$solr_col' exists: "
+col_exists=`wget -q "$solr_cmd" -O - \
+    | python -c "import sys, json; cols=json.load(sys.stdin)['collections']; print '$solr_col' in cols" `
+
+if [ "x$col_exists" != "x" ] ; then
+    # running command produced a result
+    if [ "$col_exists" = "True" ] ; then
+	echo "  Exists"
+    else
+	echo "  Does not exist."
+	echo ""
+	echo "You can create the collection through the Solr admin interface, for example:"
+	echo "  wget \"$solr_endpoint/collections?action=CREATE&name=$solr_col&numShards=4&replicationFactor=1&collection.configName=$solr_config\" -O -"
+	echo ""
+	echo "Collectcion '$solr_col' could not be found on Solr endpoint '$solr_endpoint'. Exiting" >&2
+	exit -1
+    fi
+else
+    echo "Something went wrong running the command:" >&2
+    echo " $solr_cmd" >&2
+    echo "Exiting" >&2
+    exit -1
+fi
+
+
+
+nohup_cmd="./SCRIPTS-CWD/JSONLIST-RUN-YARN-SPARK.sh pair-tree-annika-1k-fiction-vol-ids.txt $solr_col"
+echo ""
+echo "Launching nohup cmd:"
+echo "  $nohup_cmd"
+
+nohup $nohup_cmd &
+
+#nohup ./SCRIPTS-CWD/JSONLIST-RUN-YARN-SPARK.sh \
+#      pair-tree-annika-1k-fiction-vol-ids.txt $solr_col &
