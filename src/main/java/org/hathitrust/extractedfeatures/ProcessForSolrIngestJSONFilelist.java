@@ -40,8 +40,8 @@ public class ProcessForSolrIngestJSONFilelist implements Serializable
 	protected int    _verbosity;
 
 	public ProcessForSolrIngestJSONFilelist(String input_dir, String json_list_filename,
-											String solr_collection, String solr_base_url, 
-											String output_dir, int verbosity)
+						String solr_collection, String solr_base_url, 
+						String output_dir, int verbosity)
 	{
 		_input_dir = input_dir;
 		_json_list_filename = json_list_filename;
@@ -51,8 +51,9 @@ public class ProcessForSolrIngestJSONFilelist implements Serializable
 		
 		boolean use_whitelist = Boolean.getBoolean("wcsa-ef-ingest.use-whitelist");
 		_whitelist_filename = (use_whitelist) ?  System.getProperty("wcsa-ef-ingest.whitelist-filename") : null;
-		
+
 		boolean use_langmap = Boolean.getBoolean("wcsa-ef-ingest.use-langmap");
+		System.out.println("*** ProcessForSolrIngestJSONFilelist Constructor, use_langmap = " + use_langmap);
 		_langmap_directory = (use_langmap) ?  System.getProperty("wcsa-ef-ingest.langmap-directory") : null;
 		
 		_output_dir = output_dir;
@@ -131,8 +132,8 @@ public class ProcessForSolrIngestJSONFilelist implements Serializable
 		ArrayList<String> solr_endpoints = extrapolateSolrEndpoints(_solr_collection);
 		
 		PerVolumeJSONList per_vol_json = new PerVolumeJSONList(_input_dir,_whitelist_filename, _langmap_directory,
-														solr_endpoints,_output_dir,_verbosity,
-														icu_tokenize,strict_file_io);
+								       solr_endpoints,_output_dir,_verbosity,
+								       icu_tokenize,strict_file_io);
 
 		JavaRDD<Integer> per_volume_page_count = json_list_data_rp.map(per_vol_json);
 		per_volume_page_count.setName("volume-page-counts");
@@ -203,7 +204,9 @@ public class ProcessForSolrIngestJSONFilelist implements Serializable
 		int verbosity = Integer.parseInt(verbosity_str);
 
 		String property_filename = cmd.getOptionValue("properties",null);
-	
+		System.out.println("*** ProcessForSolrIngestJSONFilelist::main(), property_filename = " + property_filename);
+
+			
 		String output_dir = cmd.getOptionValue("output-dir",null);
 		String solr_base_url   = cmd.getOptionValue("solr-base-url",null);
 		boolean read_only   = cmd.hasOption("read-only");
@@ -249,8 +252,8 @@ public class ProcessForSolrIngestJSONFilelist implements Serializable
 		
 		ProcessForSolrIngestJSONFilelist prep_for_ingest 
 			= new ProcessForSolrIngestJSONFilelist(input_dir,json_file_list, 
-												   solr_collection,solr_base_url, 
-												   output_dir,verbosity);
+							       solr_collection,solr_base_url, 
+							       output_dir,verbosity);
 			
 		prep_for_ingest.execPerVolumeJSONFilelist();
 		
