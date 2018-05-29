@@ -1,14 +1,31 @@
 #!/bin/bash
 
-solr_col=${1:-TMP-faceted-htrc-fictsample-ef20}
-solr_config=${2:-htrc_configs}
+. ./scripts/env-check.sh
+
+default_solr_col="$USER-fict1055-htrc-baseline"
+default_solr_config="htrc_configs"
+default_num_shards=4
+default_hdfs_json_list="/user/dbbridge/pair-tree-annika-1k-fiction-vol-ids.txt"
+
+if [ "x$1" = "x-h" ] || [ "x$1" = "x-?" ] ; then
+    echo "Usage:" >&2
+    echo "  $0 [solr-col] [solr-config] [num-shards] [hdfs-file.txt]" >&2
+    echo "Defaults to:" >&2
+    echo "  $0 $default_solr_col $default_solr_config $default_num_shards $default_hdfs_json_list" >&2
+    exit -1
+fi
+
+
+solr_col=${1:-$default_solr_col}
+solr_config=${2:-$default_solr_config}
+
+num_shards=${3:-$default_num_shards};
+hdfs_json_list="${4:-$default_hdfs_json_list}"
 
 SOLR_NODES_ARRAY=($SOLR_NODES)
-solr_node=${SOLR_NODES_ARRAY[0]}
-solr_host=${solr_node%.*}
+solr_host_with_port=${SOLR_NODES_ARRAY[0]}
 
-
-solr_endpoint="http://$solr_host/solr/admin"
+solr_endpoint="http://$solr_host_with_port/solr/admin"
 solr_cmd="$solr_endpoint/collections?action=list"
 
 echo ""
@@ -24,7 +41,7 @@ if [ "x$col_exists" != "x" ] ; then
 	echo "  Does not exist."
 	echo ""
 	echo "You can create the collection through the Solr admin interface, for example:"
-	echo "  wget \"$solr_endpoint/collections?action=CREATE&name=$solr_col&numShards=4&replicationFactor=1&collection.configName=$solr_config\" -O -"
+	echo "  wget \"$solr_endpoint/collections?action=CREATE&name=$solr_col&numShards=$num_shards&replicationFactor=1&collection.configName=$solr_config\" -O -"
 	echo ""
 	echo "Collectcion '$solr_col' could not be found on Solr endpoint '$solr_endpoint'. Exiting" >&2
 	exit -1
@@ -38,7 +55,7 @@ fi
 
 
 
-nohup_cmd="./SCRIPTS-CWD/JSONLIST-RUN-YARN-SPARK.sh pair-tree-annika-1k-fiction-vol-ids.txt $solr_col"
+nohup_cmd="./SCRIPTS-CWD/JSONLIST-RUN-YARN-SPARK.sh $hdfs_json_list $solr_col"
 echo ""
 echo "Launching nohup cmd:"
 echo "  $nohup_cmd"
