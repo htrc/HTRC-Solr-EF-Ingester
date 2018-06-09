@@ -13,8 +13,10 @@ import java.util.stream.Stream;
 
 import org.apache.commons.cli.*;
 import org.apache.hadoop.io.Text;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-public class ProcessForSerialSolrIngest 
+public class ProcessForSerialConceptIncrementalIngest 
 {
 	//private static final long serialVersionUID = 1L;
 	
@@ -30,7 +32,7 @@ public class ProcessForSerialSolrIngest
 	
 	protected int    _verbosity;
 
-	public ProcessForSerialSolrIngest(String input_file, String solr_collection,
+	public ProcessForSerialConceptIncrementalIngest(String input_file, String solr_collection,
 									  String solr_base_url, String output_dir, int verbosity)
 	{
 		_input_file = input_file;
@@ -50,7 +52,7 @@ public class ProcessForSerialSolrIngest
 
 	protected String generateAppName()
 	{
-		String app_name = "Extract Features: Process for Serial Solr Ingest";
+		String app_name = "Capisco Concepts: Process for Serial Solr Incremental Ingest";
 		app_name += " [" + _solr_collection + "]";
 
 		if (_solr_base_url != null) { 
@@ -116,7 +118,7 @@ public class ProcessForSerialSolrIngest
 			e.printStackTrace();
 		}
 		*/
-		String text_string = ClusterFileIO.readCompressedTextFile(json_filename);
+		String text_string = ClusterFileIO.readTextFile(json_filename);
 		
 		//ArrayList<String> text_lines = readFileLines(json_path);
 		
@@ -127,34 +129,43 @@ public class ProcessForSerialSolrIngest
 		
 	}
 	
-	public void execPerVolumeSequenceFile()
+	public void execPerVolumeJSONFile()
 	{
+		// based on execPerVolumeSequenceFile() for Spark configuration using 'call()'
+		// but code to be run in a serial fashion
+		
 		String serial_app_name = generateAppName();		
 		System.out.println(serial_app_name);
 		
-		Path json_filelist_path = Paths.get(_input_file);
+		// Read in Capisco JSON concept file
+		Path json_capisco_concept_path = Paths.get(_input_file);
+		System.out.println("Processing Capisco concept jsonfile: " + json_capisco_concept_path);
+		Text json_capisco_concept_text = readJSONText(json_capisco_concept_path);
+		JSONArray capisco_concepts_vol_array  = new JSONArray(json_capisco_concept_text.toString());
 		
-		// Read in text file
-		ArrayList<String> json_file_list = readFileLines(json_filelist_path);
-		
+		// **** can remove the following
 		boolean icu_tokenize = Boolean.getBoolean("wcsa-ef-ingest.icu-tokenize");
 		boolean strict_file_io = Boolean.getBoolean("wcsa-ef-ingest.strict-file-io");
 		
 		ArrayList<String> solr_endpoints = extrapolateSolrEndpoints(_solr_collection);
 		
 		System.out.println("*** away to create PerVolumeJSON class, _langmap_directory = " + _langmap_directory);
-		PerVolumeJSON per_vol_json = new PerVolumeJSON(_input_file,_whitelist_filename, _langmap_directory,
+		PerVolumeUtil per_vol_util = new PerVolumeUtil(_input_file,_whitelist_filename, _langmap_directory,
 											           solr_endpoints,_output_dir,_verbosity,
 											           icu_tokenize,strict_file_io);
 		
-		// Foreach file, call per_vol_json.call()
+		// For-each array entry, call per_vol_json.call()
 		long num_vol_ids = 0;
-		long json_file_list_len = json_file_list.size();
-		for (String json_filename : json_file_list) {
-			//Path json_path = Paths.get("file://D:/cygwin64/home/davidb/research/code-managed/hathitrust/wcsa/extracted-features-solr/trunk/solr-ingest/json-files",json_filename);
-			Path json_path = Paths.get("json-files",json_filename);
+		long vol_array_len = capisco_concepts_vol_array.length();
+		for (int v=0; v<vol_array_len; v++) {
 			
+			// build up Solr update record for concepts
+			JSONObject vol_rec = capisco_concepts_vol_array.getJSONObject(v);
+			//String vol_id = vol_rec.getString("volId");
 			
+			int num_processed = per_vol_util.callAddConcepts(vol_rec);
+				
+			/*
 			System.out.println("Processing jsonfile: " + json_path);
 			Text json_text = readJSONText(json_path);
 			try {
@@ -162,8 +173,11 @@ public class ProcessForSerialSolrIngest
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			num_vol_ids++;
-			System.out.println("+ Processed " + num_vol_ids + "/" + json_file_list_len);
+			*/
+			
+			
+			num_vol_ids += num_processed;
+			System.out.println("== Processed " + num_vol_ids + "/" + vol_array_len);
 		}
 	
 		
@@ -276,10 +290,10 @@ public class ProcessForSerialSolrIngest
 		String input_file  = filtered_args[0];
 		String solr_collection = filtered_args[1];
 		
-		ProcessForSerialSolrIngest prep_for_ingest 
-			= new ProcessForSerialSolrIngest(input_file,solr_collection,solr_base_url,output_dir,verbosity);
+		ProcessForSerialConceptIncrementalIngest prep_for_inc_ingest 
+			= new ProcessForSerialConceptIncrementalIngest(input_file,solr_collection,solr_base_url,output_dir,verbosity);
 			
-		prep_for_ingest.execPerVolumeSequenceFile();
+		prep_for_inc_ingest.execPerVolumeJSONFile();
 		
 	}
 }

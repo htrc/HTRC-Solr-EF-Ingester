@@ -180,7 +180,7 @@ class PerVolumeMongoDBDocumentsMap implements Function<String, Integer>
 			
 			String full_json_file_in = _input_dir + "/" + json_file_in;
 			System.out.println("Processing: " + full_json_file_in);
-			String extracted_feature_json_doc = ClusterFileIO.readTextFile(full_json_file_in);
+			String extracted_feature_json_doc = ClusterFileIO.readCompressedTextFile(full_json_file_in);
 			
 			Document doc = Document.parse(extracted_feature_json_doc);
 			

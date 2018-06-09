@@ -202,6 +202,56 @@ public class PerVolumeUtil implements Serializable
 
 	}
 		
+	public Integer callAddConcepts(JSONObject vol_rec)
+	{
+	
+		int num_processed = 1;
+		
+		String solr_url = null;
+		if (_solr_endpoints_len > 0) {
+			int random_choice = (int)(_solr_endpoints_len * Math.random());
+			solr_url = _solr_endpoints.get(random_choice);
+		}
+		
+		String volume_id = vol_rec.getString("volId");
+		JSONArray capisco_pages = vol_rec.getJSONArray("pages");
+		
+		if (capisco_pages != null) {
+			
+
+			JSONObject solr_update_concept_metadata_doc_json = SolrDocJSON.generateIncrementalUpdateMetadata(volume_id,capisco_pages);
+			if (solr_update_concept_metadata_doc_json != null) {
+
+				if ((_verbosity >=2)) {
+					System.out.println("==================");
+					System.out.println("Concept JSON: " + solr_update_concept_metadata_doc_json.toString());
+					System.out.println("==================");
+				}
+
+				if (solr_url != null) {
+
+					if ((_verbosity >=2) ) {
+						System.out.println("==================");
+						System.out.println("Posting to: " + solr_url);
+						System.out.println("==================");
+					}
+					SolrDocJSON.postSolrDoc(solr_url, solr_update_concept_metadata_doc_json, volume_id, "top-level-metadata");
+				}
+			}
+			else {
+				if ((_verbosity >=1)) {
+					System.out.println("==================");
+					System.out.println("No page-tagged concepts present for: " + volume_id);
+					System.out.println("==================");
+				}
+			}
+		}
+		
+		// now do as page-level ??
+		
+		
+		return num_processed;
+	}
 		/*
 	//public void call(String json_file_in) throws IOException
 	public Integer call(String json_file_in) throws IOException

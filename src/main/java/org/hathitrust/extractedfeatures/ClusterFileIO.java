@@ -168,6 +168,27 @@ public class ClusterFileIO {
 		StringBuilder sb = new StringBuilder();
 		
 		try {	
+			BufferedInputStream bis = ClusterFileIO.getBufferedInputStream(filename);
+			
+			int cp;
+			while ((cp = bis.read()) != -1) {
+			    sb.append((char) cp);
+			}
+	
+	        bis.close();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return sb.toString();
+	}
+	
+	protected static String readCompressedTextFile(String filename)
+	{
+		StringBuilder sb = new StringBuilder();
+		
+		try {	
 			BufferedReader br = ClusterFileIO.getBufferedReaderForCompressedFile(filename);
 
 			int cp;

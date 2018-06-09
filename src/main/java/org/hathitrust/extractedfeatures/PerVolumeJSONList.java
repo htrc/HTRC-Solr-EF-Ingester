@@ -32,7 +32,7 @@ public class PerVolumeJSONList implements Function<String,Integer>
 	{
 		// Read in JSON file as Text
 		String full_json_file_in = _per_vol_util.getInputDir() + "/" + json_file_in;
-		String json_content_string = ClusterFileIO.readTextFile(full_json_file_in);
+		String json_content_string = ClusterFileIO.readCompressedTextFile(full_json_file_in);
 		
 		Text json_content_text = new Text(json_content_string);
 	
