@@ -728,8 +728,10 @@ public class SolrDocJSON {
 		return solr_update_json;
 	}
 
-	public static JSONObject generateIncrementalUpdateMetadata(String volume_id, JSONArray pages_array)
+        public static JSONObject generateIncrementalUpdateMetadata(String volume_id, JSONArray pages_array, String update_mode)
 	{
+	    // update_mode: "set", "inc", "add", "remove", ...
+	    
 		// https://lucene.apache.org/solr/guide/7_3/updating-parts-of-documents.html
 		//
 		//{ "id":"mydoc",
@@ -784,11 +786,12 @@ public class SolrDocJSON {
 		while (metadata_key_iter.hasNext()) {
 			String metadata_key = metadata_key_iter.next();
 			
+			// If using >= Solr-7.3 then 'add-distinct' is supported, e.g.:
 			// key : {"add-distinct": [vals]} 
 			
 			JSONArray field_vals = metadata.getJSONArray(metadata_key);
 			JSONObject field_add_distinct = new JSONObject();
-			field_add_distinct.put("add-distinct", field_vals);
+			field_add_distinct.put(update_mode, field_vals);
 			
 			
 			if (is_page_level) {
@@ -797,10 +800,10 @@ public class SolrDocJSON {
 			}
 			else {
 				update_field_keys.put(metadata_key+"_t",field_add_distinct);
-				update_field_keys.put(metadata_key+"_s",field_add_distinct);
+				update_field_keys.put(metadata_key+"_ss",field_add_distinct);
 			}
 		}
-		
+
 		return update_field_keys;
 	}
 	
@@ -894,7 +897,7 @@ public class SolrDocJSON {
 		}
 	}
 	
-        public static void postSolrDoc(String post_url, JSONObject solr_add_doc_json,
+        public static void postSolrDoc(String post_url, String solr_add_doc_json_str,
 				       String volume_id, String page_id)
 	{
 		
@@ -914,7 +917,7 @@ public class SolrDocJSON {
 			httpcon.setRequestMethod("POST");
 			httpcon.connect();
 
-			byte[] outputBytes = solr_add_doc_json.toString().getBytes("UTF-8");
+			byte[] outputBytes = solr_add_doc_json_str.getBytes("UTF-8");
 			OutputStream os = httpcon.getOutputStream();
 			os.write(outputBytes);
 			os.close();
@@ -955,4 +958,17 @@ public class SolrDocJSON {
 			e.printStackTrace();
 		}
 	}
+
+        public static void postSolrDoc(String post_url, JSONObject solr_add_doc_json,
+				       String volume_id, String page_id)
+	{
+	    postSolrDoc(post_url,solr_add_doc_json.toString(),volume_id,page_id);
+	}
+
+        public static void postSolrDoc(String post_url, JSONArray solr_add_doc_json_array,
+				       String volume_id, String page_id)
+	{
+	    postSolrDoc(post_url,solr_add_doc_json_array.toString(),volume_id,page_id);
+	}
+    
 }
