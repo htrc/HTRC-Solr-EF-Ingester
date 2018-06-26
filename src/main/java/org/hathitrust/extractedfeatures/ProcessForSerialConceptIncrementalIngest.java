@@ -50,9 +50,9 @@ public class ProcessForSerialConceptIncrementalIngest
 		_verbosity  = verbosity;
 	}
 
-	protected String generateAppName()
+	protected String generateAppName(String level)
 	{
-		String app_name = "Capisco Concepts: Process for Serial Solr Incremental Ingest";
+		String app_name = "Capisco Concepts: Process for Serial Solr Incremental Ingest [" + level + "]";
 		app_name += " [" + _solr_collection + "]";
 
 		if (_solr_base_url != null) { 
@@ -129,12 +129,73 @@ public class ProcessForSerialConceptIncrementalIngest
 		
 	}
 	
+	public void execPerPageJSONFile()
+	{
+		// based on execPerVolumeSequenceFile() for Spark configuration using 'call()'
+		// but code to be run in a serial fashion
+		
+		String serial_app_name = generateAppName("Page");		
+		System.out.println(serial_app_name);
+		
+		// Read in Capisco JSON concept file
+		Path json_capisco_concept_path = Paths.get(_input_file);
+		System.out.println("Processing Capisco concept jsonfile: " + json_capisco_concept_path);
+		Text json_capisco_concept_text = readJSONText(json_capisco_concept_path);
+		JSONArray capisco_concepts_page_array  = new JSONArray(json_capisco_concept_text.toString());
+		
+		// **** can remove the following
+		boolean icu_tokenize = Boolean.getBoolean("wcsa-ef-ingest.icu-tokenize");
+		boolean strict_file_io = Boolean.getBoolean("wcsa-ef-ingest.strict-file-io");
+		
+		ArrayList<String> solr_endpoints = extrapolateSolrEndpoints(_solr_collection);
+		
+		System.out.println("*** away to create PerVolumeJSON class, _langmap_directory = " + _langmap_directory);
+		PerVolumeUtil per_vol_util = new PerVolumeUtil(_input_file,_whitelist_filename, _langmap_directory,
+											           solr_endpoints,_output_dir,_verbosity,
+											           icu_tokenize,strict_file_io);
+		
+		// For-each array entry, call per_vol_json.call()
+		long num_page_ids = 0;
+		long page_array_len = capisco_concepts_page_array.length();
+		for (int p=0; p<page_array_len; p++) {
+			
+			// build up Solr update record for concepts
+			JSONObject page_rec = capisco_concepts_page_array.getJSONObject(p);
+			
+			int num_processed = per_vol_util.callAddConceptsPageLevel(page_rec);
+				
+			/*
+			System.out.println("Processing jsonfile: " + json_path);
+			Text json_text = readJSONText(json_path);
+			try {
+				per_vol_json.call(json_text);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			*/
+			
+			
+			num_page_ids += num_processed;
+			System.out.println("== Processed " + num_page_ids + "/" + page_array_len);
+		}
+	
+		
+		System.out.println("");
+		System.out.println("############");
+		System.out.println("# Number of page ids: " + num_page_ids);
+		System.out.println("############");
+		System.out.println("");
+
+	}
+	
+
+	
 	public void execPerVolumeJSONFile()
 	{
 		// based on execPerVolumeSequenceFile() for Spark configuration using 'call()'
 		// but code to be run in a serial fashion
 		
-		String serial_app_name = generateAppName();		
+		String serial_app_name = generateAppName("Volume");		
 		System.out.println(serial_app_name);
 		
 		// Read in Capisco JSON concept file
@@ -163,7 +224,7 @@ public class ProcessForSerialConceptIncrementalIngest
 			JSONObject vol_rec = capisco_concepts_vol_array.getJSONObject(v);
 			//String vol_id = vol_rec.getString("volId");
 			
-			int num_processed = per_vol_util.callAddConcepts(vol_rec);
+			int num_processed = per_vol_util.callAddConceptsVolumeLevel(vol_rec);
 				
 			/*
 			System.out.println("Processing jsonfile: " + json_path);
@@ -179,20 +240,16 @@ public class ProcessForSerialConceptIncrementalIngest
 			num_vol_ids += num_processed;
 			System.out.println("== Processed " + num_vol_ids + "/" + vol_array_len);
 		}
-	
 		
 		System.out.println("");
 		System.out.println("############");
 		System.out.println("# Number of volume ids: " + num_vol_ids);
 		System.out.println("############");
 		System.out.println("");
-
-	
-		
 		
 	}
-		
-
+	
+	
 	public static void print_usage(HelpFormatter formatter, Options options)
 	{
 		formatter.printHelp("RUN.bash [options] input-file solr-collection", options);
@@ -293,7 +350,9 @@ public class ProcessForSerialConceptIncrementalIngest
 		ProcessForSerialConceptIncrementalIngest prep_for_inc_ingest 
 			= new ProcessForSerialConceptIncrementalIngest(input_file,solr_collection,solr_base_url,output_dir,verbosity);
 			
-		prep_for_inc_ingest.execPerVolumeJSONFile();
+		//prep_for_inc_ingest.execPerVolumeJSONFile();
+		prep_for_inc_ingest.execPerPageJSONFile();
+		
 		
 	}
 }

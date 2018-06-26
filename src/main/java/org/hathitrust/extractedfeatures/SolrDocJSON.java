@@ -803,17 +803,27 @@ public class SolrDocJSON {
 		
 		// Now generate the JSONObject for Solr, both for the page level and as a top-up  to the volume-level
 		String full_page_id = volume_id+"."+page_id;
-		JSONObject page_update_field_keys = generateSolrUpdateMetadata(full_page_id,metadata,true,"add-distinct"); // is_page_level=true
-		JSONObject vol_update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,"add-distinct"); // is_page_level=false
+		//JSONObject page_update_field_keys = generateSolrUpdateMetadata(full_page_id,metadata,true,"add-distinct"); // is_page_level=true
+		JSONObject page_update_field_keys_del = generateSolrUpdateMetadata(full_page_id,metadata,true,"remove"); // is_page_level=true
+		JSONObject page_update_field_keys_add = generateSolrUpdateMetadata(full_page_id,metadata,true,"add"); // is_page_level=true
+		
+		//JSONObject vol_update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,"add-distinct"); // is_page_level=false
+		JSONObject vol_update_field_keys_del = generateSolrUpdateMetadata(volume_id,metadata,false,"remove"); // is_page_level=false
+		JSONObject vol_update_field_keys_add = generateSolrUpdateMetadata(volume_id,metadata,false,"add"); // is_page_level=false
 		
 		JSONArray update_field_keys = new JSONArray();
-		update_field_keys.put(page_update_field_keys);
-		update_field_keys.put(vol_update_field_keys);
+		//update_field_keys.put(page_update_field_keys);
+		update_field_keys.put(page_update_field_keys_del);
+		update_field_keys.put(page_update_field_keys_add);
+
+		//update_field_keys.put(vol_update_field_keys);
+		update_field_keys.put(vol_update_field_keys_del);
+		update_field_keys.put(vol_update_field_keys_add);
 		
 		return update_field_keys;
 	}
 	
-	public static JSONObject generateIncrementalVolumeUpdateMetadata(String volume_id, JSONArray pages_array, String update_mode)
+	public static JSONArray generateIncrementalVolumeUpdateMetadata(String volume_id, JSONArray pages_array)
 	{
 		
 		// update_mode: "set", "inc", "add", "remove", ...
@@ -846,35 +856,15 @@ public class SolrDocJSON {
 		metadata.put("concept", volume_concept_vals_array); 
 		
 		// Now generate the JSONObject for Solr
-		JSONObject update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,update_mode); // is_page_level=false
+		boolean is_page_level = false; // for readability
+		//JSONObject update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,is_page_level,"add-distinct");
+		JSONObject update_field_keys_del = generateSolrUpdateMetadata(volume_id,metadata,is_page_level,"remove"); 
+		JSONObject update_field_keys_add = generateSolrUpdateMetadata(volume_id,metadata,is_page_level,"add"); 
 		
-		/*
-		JSONObject update_field_keys = new JSONObject();
-		update_field_keys.put("id",volume_id);
+		JSONArray update_field_keys = new JSONArray();
+		update_field_keys.put(update_field_keys_del);
+		update_field_keys.put(update_field_keys_add);
 		
-		Iterator<String> metadata_key_iter = metadata.keys();
-		while (metadata_key_iter.hasNext()) {
-			String metadata_key = metadata_key_iter.next();
-			
-			// If using >= Solr-7.3 then 'add-distinct' is supported, e.g.:
-			// key : {"add-distinct": [vals]} 
-			
-			JSONArray field_vals = metadata.getJSONArray(metadata_key);
-			JSONObject field_add_distinct = new JSONObject();
-			field_add_distinct.put(update_mode, field_vals);
-			
-			
-			if (is_page_level) {
-				update_field_keys.put("volume"+metadata_key+"_txt",field_add_distinct);
-				update_field_keys.put("volume"+metadata_key+"_htrcstring",field_add_distinct);
-			}
-			else {
-				update_field_keys.put(metadata_key+"_t",field_add_distinct);
-				update_field_keys.put(metadata_key+"_ss",field_add_distinct);
-			}
-		}
-
-		*/
 		return update_field_keys;
 	}
 	
@@ -969,7 +959,7 @@ public class SolrDocJSON {
 	}
 	
         public static void postSolrDoc(String post_url, String solr_add_doc_json_str,
-				       String volume_id, String page_id)
+				       				   String info_volume_id, String info_page_id)
 	{
 		
 		//String curl_popen = "curl -X POST -H 'Content-Type: application/json'";
@@ -1021,7 +1011,7 @@ public class SolrDocJSON {
 			
 		}
 		catch (IOException e) {
-		        System.err.println("Solr core update failed when processing id: " + volume_id + "." + page_id);
+		        System.err.println("Solr core update failed when processing id: " + info_volume_id + "." + info_page_id);
 			e.printStackTrace();
 		}
 

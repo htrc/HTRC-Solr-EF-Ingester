@@ -5,7 +5,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-    
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.hadoop.io.Text;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
@@ -202,7 +204,52 @@ public class PerVolumeUtil implements Serializable
 
 	}
 		
-	public Integer callAddConcepts(JSONObject vol_rec)
+	public Integer callAddConceptsPageLevel(JSONObject page_rec)
+	{
+		String solr_url = null;
+		if (_solr_endpoints_len > 0) {
+			int random_choice = (int)(_solr_endpoints_len * Math.random());
+			solr_url = _solr_endpoints.get(random_choice);
+		}
+		
+		String volume_id = page_rec.getString("documentId");
+		String page_id_filename = page_rec.getString("pageId");
+		
+		Pattern page_id_pattern = Pattern.compile("(\\d{6})\\.txt$"); // Solr operates on 6-zero padded page Ids
+		Matcher page_id_matcher = page_id_pattern.matcher(page_id_filename);
+		String page_id = "page-"+page_id_matcher.group(1);
+		
+		JSONArray solr_update_concept_metadata_doc_json = SolrDocJSON.generateIncrementalPageUpdateMetadata(volume_id,page_id,page_rec);
+		if (solr_update_concept_metadata_doc_json != null) {
+
+			if ((_verbosity >=2)) {
+				System.out.println("==================");
+				System.out.println("Concept JSON: " + solr_update_concept_metadata_doc_json.toString());
+				System.out.println("==================");
+			}
+
+			if (solr_url != null) {
+
+				if ((_verbosity >=2) ) {
+					System.out.println("==================");
+					System.out.println("Posting to: " + solr_url);
+					System.out.println("==================");
+				}
+				SolrDocJSON.postSolrDoc(solr_url, solr_update_concept_metadata_doc_json, volume_id, page_id);
+			}
+		}
+		else {
+			if ((_verbosity >=1)) {
+				System.out.println("==================");
+				System.out.println("No page-tagged concepts present for: " + page_id);
+				System.out.println("==================");
+			}
+		}
+	
+		return 1;
+	}
+	
+	public Integer callAddConceptsVolumeLevel(JSONObject vol_rec)
 	{
 	
 		int num_processed = 1;
@@ -218,17 +265,20 @@ public class PerVolumeUtil implements Serializable
 		
 		if (capisco_pages != null) {
 			
-		        // Need to get to Solr-7.3 to have "add-distinct" so need to use "remove" followed by "add" fo rnow
-		        JSONObject solr_update_remove_concept_metadata_doc_json = SolrDocJSON.generateIncrementalUpdateMetadata(volume_id,capisco_pages,"remove");
-			JSONObject solr_update_add_concept_metadata_doc_json = SolrDocJSON.generateIncrementalUpdateMetadata(volume_id,capisco_pages,"add");
-			if (solr_update_add_concept_metadata_doc_json != null) {
+			// Need to get to Solr-7.3 to have "add-distinct" so the following returns an array
+			// built out of "remove" followed by "add" for now
+			JSONArray solr_update_cmds_concept_metadata_doc_json = SolrDocJSON.generateIncrementalVolumeUpdateMetadata(volume_id,capisco_pages);
+			//JSONObject solr_update_remove_concept_metadata_doc_json = SolrDocJSON.generateIncrementalVolumeUpdateMetadata(volume_id,capisco_pages,"remove");
+			//JSONObject solr_update_add_concept_metadata_doc_json = SolrDocJSON.generateIncrementalVolumeUpdateMetadata(volume_id,capisco_pages,"add");
+			if (solr_update_cmds_concept_metadata_doc_json != null) {
 
-			    // even if working with a single record, SolrPOST expects an array of values
-			    // prior to Solr-7.3 so need to build array anyway
-			    JSONArray solr_update_cmds_concept_metadata_doc_json = new JSONArray();
-			    solr_update_cmds_concept_metadata_doc_json.put(solr_update_remove_concept_metadata_doc_json);
-			    solr_update_cmds_concept_metadata_doc_json.put(solr_update_add_concept_metadata_doc_json);
-			    
+				// even if working with a single record, SolrPOST expects an array of values
+				// prior to Solr-7.3 so need to build array anyway
+				//JSONArray solr_update_cmds_concept_metadata_doc_json = new JSONArray();
+				//solr_update_cmds_concept_metadata_doc_json.put(solr_update_remove_concept_metadata_doc_json);
+				//solr_update_cmds_concept_metadata_doc_json.put(solr_update_add_concept_metadata_doc_json);
+
+
 				if ((_verbosity >=2)) {
 					System.out.println("==================");
 					System.out.println("Concept JSON: " + solr_update_cmds_concept_metadata_doc_json.toString());
@@ -259,6 +309,8 @@ public class PerVolumeUtil implements Serializable
 		
 		return num_processed;
 	}
+	
+
 		/*
 	//public void call(String json_file_in) throws IOException
 	public Integer call(String json_file_in) throws IOException
