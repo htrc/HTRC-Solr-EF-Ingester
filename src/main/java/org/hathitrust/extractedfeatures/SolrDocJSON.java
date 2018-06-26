@@ -798,27 +798,32 @@ public class SolrDocJSON {
 		// Extract out the concepts we want and turn into JSONArray of vals
 		JSONArray page_concept_vals_array = convertCapiscoConceptsPageTOSolrMetadata(page_rec);
 
-		JSONObject metadata = new JSONObject();
-		metadata.put("concept", page_concept_vals_array); 
+		JSONArray update_field_keys = null;
 		
-		// Now generate the JSONObject for Solr, both for the page level and as a top-up  to the volume-level
-		String full_page_id = volume_id+"."+page_id;
-		//JSONObject page_update_field_keys = generateSolrUpdateMetadata(full_page_id,metadata,true,"add-distinct"); // is_page_level=true
-		JSONObject page_update_field_keys_del = generateSolrUpdateMetadata(full_page_id,metadata,true,"remove"); // is_page_level=true
-		JSONObject page_update_field_keys_add = generateSolrUpdateMetadata(full_page_id,metadata,true,"add"); // is_page_level=true
-		
-		//JSONObject vol_update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,"add-distinct"); // is_page_level=false
-		JSONObject vol_update_field_keys_del = generateSolrUpdateMetadata(volume_id,metadata,false,"remove"); // is_page_level=false
-		JSONObject vol_update_field_keys_add = generateSolrUpdateMetadata(volume_id,metadata,false,"add"); // is_page_level=false
-		
-		JSONArray update_field_keys = new JSONArray();
-		//update_field_keys.put(page_update_field_keys);
-		update_field_keys.put(page_update_field_keys_del);
-		update_field_keys.put(page_update_field_keys_add);
+		if (page_concept_vals_array.length() > 0) {
+			
+			JSONObject metadata = new JSONObject();
+			metadata.put("concept", page_concept_vals_array); 
 
-		//update_field_keys.put(vol_update_field_keys);
-		update_field_keys.put(vol_update_field_keys_del);
-		update_field_keys.put(vol_update_field_keys_add);
+			// Now generate the JSONObject for Solr, both for the page level and as a top-up  to the volume-level
+			String full_page_id = volume_id+"."+page_id;
+			//JSONObject page_update_field_keys = generateSolrUpdateMetadata(full_page_id,metadata,true,"add-distinct"); // is_page_level=true
+			JSONObject page_update_field_keys_del = generateSolrUpdateMetadata(full_page_id,metadata,true,"remove"); // is_page_level=true
+			JSONObject page_update_field_keys_add = generateSolrUpdateMetadata(full_page_id,metadata,true,"add"); // is_page_level=true
+
+			//JSONObject vol_update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,"add-distinct"); // is_page_level=false
+			JSONObject vol_update_field_keys_del = generateSolrUpdateMetadata(volume_id,metadata,false,"remove"); // is_page_level=false
+			JSONObject vol_update_field_keys_add = generateSolrUpdateMetadata(volume_id,metadata,false,"add"); // is_page_level=false
+
+			update_field_keys = new JSONArray();
+			//update_field_keys.put(page_update_field_keys);
+			update_field_keys.put(page_update_field_keys_del);
+			update_field_keys.put(page_update_field_keys_add);
+
+			//update_field_keys.put(vol_update_field_keys);
+			update_field_keys.put(vol_update_field_keys_del);
+			update_field_keys.put(vol_update_field_keys_add);
+		}
 		
 		return update_field_keys;
 	}
