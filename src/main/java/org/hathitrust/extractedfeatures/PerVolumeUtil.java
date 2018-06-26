@@ -217,7 +217,14 @@ public class PerVolumeUtil implements Serializable
 		
 		Pattern page_id_pattern = Pattern.compile("(\\d{6})\\.txt$"); // Solr operates on 6-zero padded page Ids
 		Matcher page_id_matcher = page_id_pattern.matcher(page_id_filename);
-		String page_id = "page-"+page_id_matcher.group(1);
+		String page_id;
+		if (page_id_matcher.find()) {		    
+		    page_id = "page-"+page_id_matcher.group(1);
+		}
+		else {
+		    System.err.println("Error: Failed to find valid page-id in: '" + page_id_filename +"'");
+		    page_id = null;
+		}
 		
 		JSONArray solr_update_concept_metadata_doc_json = SolrDocJSON.generateIncrementalPageUpdateMetadata(volume_id,page_id,page_rec);
 		if (solr_update_concept_metadata_doc_json != null) {
