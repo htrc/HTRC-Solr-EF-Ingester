@@ -218,13 +218,20 @@ public class PerVolumeUtil implements Serializable
 		
 		if (capisco_pages != null) {
 			
+		        // Need to get to Solr-7.3 to have "add-distinct" so need to use "remove" followed by "add" fo rnow
+		        JSONObject solr_update_remove_concept_metadata_doc_json = SolrDocJSON.generateIncrementalUpdateMetadata(volume_id,capisco_pages,"remove");
+			JSONObject solr_update_add_concept_metadata_doc_json = SolrDocJSON.generateIncrementalUpdateMetadata(volume_id,capisco_pages,"add");
+			if (solr_update_add_concept_metadata_doc_json != null) {
 
-			JSONObject solr_update_concept_metadata_doc_json = SolrDocJSON.generateIncrementalUpdateMetadata(volume_id,capisco_pages);
-			if (solr_update_concept_metadata_doc_json != null) {
-
+			    // even if working with a single record, SolrPOST expects an array of values
+			    // prior to Solr-7.3 so need to build array anyway
+			    JSONArray solr_update_cmds_concept_metadata_doc_json = new JSONArray();
+			    solr_update_cmds_concept_metadata_doc_json.put(solr_update_remove_concept_metadata_doc_json);
+			    solr_update_cmds_concept_metadata_doc_json.put(solr_update_add_concept_metadata_doc_json);
+			    
 				if ((_verbosity >=2)) {
 					System.out.println("==================");
-					System.out.println("Concept JSON: " + solr_update_concept_metadata_doc_json.toString());
+					System.out.println("Concept JSON: " + solr_update_cmds_concept_metadata_doc_json.toString());
 					System.out.println("==================");
 				}
 
@@ -235,7 +242,7 @@ public class PerVolumeUtil implements Serializable
 						System.out.println("Posting to: " + solr_url);
 						System.out.println("==================");
 					}
-					SolrDocJSON.postSolrDoc(solr_url, solr_update_concept_metadata_doc_json, volume_id, "top-level-metadata");
+					SolrDocJSON.postSolrDoc(solr_url, solr_update_cmds_concept_metadata_doc_json, volume_id, "top-level-metadata");
 				}
 			}
 			else {
