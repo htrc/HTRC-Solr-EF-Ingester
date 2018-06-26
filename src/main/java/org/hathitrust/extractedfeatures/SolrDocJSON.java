@@ -728,11 +728,61 @@ public class SolrDocJSON {
 		return solr_update_json;
 	}
 
-        public static JSONObject generateIncrementalUpdateMetadata(String volume_id, JSONArray pages_array, String update_mode)
+	public static void convertCapiscoConceptsPageTOSolrMetadata(JSONObject page_rec, JSONArray concept_vals_array )
+	{	
+		JSONArray concept_rec_array = page_rec.getJSONArray("concepts");
+		int concept_rec_array_len = concept_rec_array.length();
+
+		for (int c=0; c<concept_rec_array_len; c++) {
+			JSONObject concept_rec = concept_rec_array.getJSONObject(c);
+
+			if (concept_rec.has("text")) {
+				String concept_text = concept_rec.getString("text");
+
+				concept_vals_array.put(concept_text);
+			}
+		}
+	}
+	
+	public static JSONArray convertCapiscoConceptsPageTOSolrMetadata(JSONObject page_rec)
 	{
-	    // update_mode: "set", "inc", "add", "remove", ...
-	    
-		// https://lucene.apache.org/solr/guide/7_3/updating-parts-of-documents.html
+		JSONArray concept_vals_array = new JSONArray();
+		convertCapiscoConceptsPageTOSolrMetadata(page_rec,concept_vals_array );
+		return concept_vals_array;
+	}
+	
+	public static JSONObject generateSolrUpdateMetadata(String id, JSONObject metadata,  
+														boolean is_page_level, String update_mode)
+	{
+		JSONObject update_field_keys = new JSONObject();
+		update_field_keys.put("id",id);
+		
+		Iterator<String> metadata_key_iter = metadata.keys();
+		while (metadata_key_iter.hasNext()) {
+			String metadata_key = metadata_key_iter.next();
+			
+			// key : {"add-distinct": [vals]} 
+			
+			JSONArray field_vals = metadata.getJSONArray(metadata_key);
+			JSONObject field_add_distinct = new JSONObject();
+			field_add_distinct.put(update_mode, field_vals);
+			
+			if (is_page_level) {
+				update_field_keys.put("volume"+metadata_key+"_txt",field_add_distinct);
+				update_field_keys.put("volume"+metadata_key+"_htrcstrings",field_add_distinct);
+			}
+			else {
+				update_field_keys.put(metadata_key+"_t",field_add_distinct);
+				update_field_keys.put(metadata_key+"_ss",field_add_distinct);
+			}
+		}
+		
+		return update_field_keys;
+	}
+	 	
+	public static JSONArray generateIncrementalPageUpdateMetadata(String volume_id, String page_id, JSONObject page_rec)
+	{
+		// Looking to generate JSON in the form:
 		//
 		//{ "id":"mydoc",
 		//	 "price":{"set":99},
@@ -742,43 +792,63 @@ public class SolrDocJSON {
 		//	 "promo_ids":{"remove":"a123x"},
 		//	 "tags":{"remove":["free_to_try","on_sale"]}
 		//	}
+		//
+		// (from https://lucene.apache.org/solr/guide/7_3/updating-parts-of-documents.html)
 		
-		boolean is_page_level = false;
+		// Extract out the concepts we want and turn into JSONArray of vals
+		JSONArray page_concept_vals_array = convertCapiscoConceptsPageTOSolrMetadata(page_rec);
+
+		JSONObject metadata = new JSONObject();
+		metadata.put("concept", page_concept_vals_array); 
+		
+		// Now generate the JSONObject for Solr, both for the page level and as a top-up  to the volume-level
+		String full_page_id = volume_id+"."+page_id;
+		JSONObject page_update_field_keys = generateSolrUpdateMetadata(full_page_id,metadata,true,"add-distinct"); // is_page_level=true
+		JSONObject vol_update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,"add-distinct"); // is_page_level=false
+		
+		JSONArray update_field_keys = new JSONArray();
+		update_field_keys.put(page_update_field_keys);
+		update_field_keys.put(vol_update_field_keys);
+		
+		return update_field_keys;
+	}
+	
+	public static JSONObject generateIncrementalVolumeUpdateMetadata(String volume_id, JSONArray pages_array, String update_mode)
+	{
+		
+		// update_mode: "set", "inc", "add", "remove", ...
+		
+		// Looking to generate JSON in the form:
+		//
+		//{ "id":"mydoc",
+		//	 "price":{"set":99},
+		//	 "popularity":{"inc":20},
+		//	 "categories":{"add":["toys","games"]},
+		//	 "sub_categories":{"add-distinct":"under_10"},
+		//	 "promo_ids":{"remove":"a123x"},
+		//	 "tags":{"remove":["free_to_try","on_sale"]}
+		//	}
+		//
+		// (from https://lucene.apache.org/solr/guide/7_3/updating-parts-of-documents.html)
 		
 		// Extract out the concepts we want and turn into JSONArray of vals
 		int pages_array_len = pages_array.length();
 
-		JSONArray concept_vals_array = new JSONArray();
+		JSONArray volume_concept_vals_array = new JSONArray();
 
 		for (int p=0; p<pages_array_len; p++) {
 
-
 			JSONObject page_rec = pages_array.getJSONObject(p);
-			JSONArray concept_rec_array = page_rec.getJSONArray("concepts");
-			int concept_rec_array_len = concept_rec_array.length();
-
-			for (int c=0; c<concept_rec_array_len; c++) {
-				JSONObject concept_rec = concept_rec_array.getJSONObject(c);
-
-				if (concept_rec.has("text")) {
-					String concept_text = concept_rec.getString("text");
-
-					concept_vals_array.put(concept_text);
-					System.out.println(volume_id + ": " + concept_text);
-
-				}
-				else {
-					System.out.println(volume_id + " -- [no concept defined]" );
-				}
-			}
+			convertCapiscoConceptsPageTOSolrMetadata(page_rec,volume_concept_vals_array);
 		}
 			
 		JSONObject metadata = new JSONObject();
-		metadata.put("concept", concept_vals_array); // **** does this need to be concept_t ???
+		metadata.put("concept", volume_concept_vals_array); 
 		
+		// Now generate the JSONObject for Solr
+		JSONObject update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,update_mode); // is_page_level=false
 		
-		// Now start to set up the JSONObject for Solr
-		
+		/*
 		JSONObject update_field_keys = new JSONObject();
 		update_field_keys.put("id",volume_id);
 		
@@ -804,6 +874,7 @@ public class SolrDocJSON {
 			}
 		}
 
+		*/
 		return update_field_keys;
 	}
 	
