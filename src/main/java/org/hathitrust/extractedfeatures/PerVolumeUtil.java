@@ -213,6 +213,10 @@ public class PerVolumeUtil implements Serializable
 		}
 		
 		String volume_id = page_rec.getString("documentId");
+		String collection_name = page_rec.getString("collectionName");
+		if (!volume_id.equals(collection_name)) {
+			volume_id = collection_name+volume_id;
+		}
 		String page_id_filename = page_rec.getString("pageId");
 		
 		Pattern page_id_pattern = Pattern.compile("(\\d{6})\\.txt$"); // Solr operates on 6-zero padded page Ids
@@ -243,6 +247,10 @@ public class PerVolumeUtil implements Serializable
 					System.out.println("==================");
 				}
 				SolrDocJSON.postSolrDoc(solr_url, solr_update_concept_metadata_doc_json, volume_id, page_id);
+				
+				// Send explicit commitWithin
+				JSONObject solr_commitwithin_json = SolrDocJSON.explicitCommitWithin();
+				SolrDocJSON.postSolrDoc(solr_url, solr_commitwithin_json, volume_id, page_id);
 			}
 		}
 		else {
