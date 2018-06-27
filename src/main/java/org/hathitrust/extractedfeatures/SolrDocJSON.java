@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -634,6 +635,16 @@ public class SolrDocJSON {
 		}
 	}
 	
+	protected static JSONObject explicitCommitWithin()
+	{
+		JSONObject solr_add_json = new JSONObject();	
+		solr_add_json.put("commitWithin", 60000); // used to be 5000
+		
+		JSONObject solr_update_json = new JSONObject();
+	
+		return solr_update_json;
+	}
+	
 	protected static JSONObject generateSolrDocJSON(String volume_id, String page_id, 
 												    JSONObject ef_metadata, JSONObject ef_page,
 											        WhitelistBloomFilter whitelist_bloomfilter, 
@@ -738,8 +749,10 @@ public class SolrDocJSON {
 
 			if (concept_rec.has("text")) {
 				String concept_text = concept_rec.getString("text");
-
 				concept_vals_array.put(concept_text);
+				
+				//String concept_text_unicode = StringEscapeUtils.unescapeJava(concept_text);
+				//concept_vals_array.put(concept_text_unicode);
 			}
 		}
 	}
@@ -761,19 +774,22 @@ public class SolrDocJSON {
 		while (metadata_key_iter.hasNext()) {
 			String metadata_key = metadata_key_iter.next();
 			
-			// key : {"add-distinct": [vals]} 
+			// Example key entry:
+			//   key : {"add-distinct": [vals]} 
+			
+			// where 'add-distinct' would be defined in update_mode;
 			
 			JSONArray field_vals = metadata.getJSONArray(metadata_key);
-			JSONObject field_add_distinct = new JSONObject();
-			field_add_distinct.put(update_mode, field_vals);
+			JSONObject field_update_mode = new JSONObject();
+			field_update_mode.put(update_mode, field_vals);
 			
 			if (is_page_level) {
-				update_field_keys.put("volume"+metadata_key+"_txt",field_add_distinct);
-				update_field_keys.put("volume"+metadata_key+"_htrcstrings",field_add_distinct);
+				update_field_keys.put("volume"+metadata_key+"_txt",field_update_mode);
+				update_field_keys.put("volume"+metadata_key+"_htrcstrings",field_update_mode);
 			}
 			else {
-				update_field_keys.put(metadata_key+"_t",field_add_distinct);
-				update_field_keys.put(metadata_key+"_ss",field_add_distinct);
+				update_field_keys.put(metadata_key+"_t",field_update_mode);
+				update_field_keys.put(metadata_key+"_ss",field_update_mode);
 			}
 		}
 		
@@ -808,12 +824,12 @@ public class SolrDocJSON {
 			// Now generate the JSONObject for Solr, both for the page level and as a top-up  to the volume-level
 			String full_page_id = volume_id+"."+page_id;
 			//JSONObject page_update_field_keys = generateSolrUpdateMetadata(full_page_id,metadata,true,"add-distinct"); // is_page_level=true
-			JSONObject page_update_field_keys_del = generateSolrUpdateMetadata(full_page_id,metadata,true,"remove"); // is_page_level=true
-			JSONObject page_update_field_keys_add = generateSolrUpdateMetadata(full_page_id,metadata,true,"add"); // is_page_level=true
+			JSONObject page_update_field_keys_del = generateSolrUpdateMetadata(full_page_id,metadata,true,"remove");     // is_page_level=true
+			JSONObject page_update_field_keys_add = generateSolrUpdateMetadata(full_page_id,metadata,true,"add");        // is_page_level=true
 
 			//JSONObject vol_update_field_keys = generateSolrUpdateMetadata(volume_id,metadata,false,"add-distinct"); // is_page_level=false
-			JSONObject vol_update_field_keys_del = generateSolrUpdateMetadata(volume_id,metadata,false,"remove"); // is_page_level=false
-			JSONObject vol_update_field_keys_add = generateSolrUpdateMetadata(volume_id,metadata,false,"add"); // is_page_level=false
+			JSONObject vol_update_field_keys_del = generateSolrUpdateMetadata(volume_id,metadata,false,"remove");     // is_page_level=false
+			JSONObject vol_update_field_keys_add = generateSolrUpdateMetadata(volume_id,metadata,false,"add");        // is_page_level=false
 
 			update_field_keys = new JSONArray();
 			//update_field_keys.put(page_update_field_keys);
@@ -823,6 +839,8 @@ public class SolrDocJSON {
 			//update_field_keys.put(vol_update_field_keys);
 			update_field_keys.put(vol_update_field_keys_del);
 			update_field_keys.put(vol_update_field_keys_add);
+			
+			//solr_add_json.put("commitWithin", 60000); // used to be 5000
 		}
 		
 		return update_field_keys;
@@ -1026,15 +1044,15 @@ public class SolrDocJSON {
 	}
 
         public static void postSolrDoc(String post_url, JSONObject solr_add_doc_json,
-				       String volume_id, String page_id)
+				       String info_volume_id, String info_page_id)
 	{
-	    postSolrDoc(post_url,solr_add_doc_json.toString(),volume_id,page_id);
+	    postSolrDoc(post_url,solr_add_doc_json.toString(),info_volume_id,info_page_id);
 	}
 
         public static void postSolrDoc(String post_url, JSONArray solr_add_doc_json_array,
-				       String volume_id, String page_id)
+				       String info_volume_id, String info_page_id)
 	{
-	    postSolrDoc(post_url,solr_add_doc_json_array.toString(),volume_id,page_id);
+	    postSolrDoc(post_url,solr_add_doc_json_array.toString(),info_volume_id,info_page_id);
 	}
     
 }
