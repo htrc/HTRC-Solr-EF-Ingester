@@ -20,7 +20,9 @@ if inf is not sys.stdin:
         inf.close()
         
                 
-print '['
-print '  '+',\n  '.join(json.dumps(i) for i in json_data)
-print ']'
+#print '['
+#print '  '+',\n  '.join(json.dumps(i) for i in json_data)
+#print ']'
+
+print '\n'.join(json.dumps(i) for i in json_data)
 
