@@ -215,7 +215,7 @@ public class PerVolumeUtil implements Serializable
 		String volume_id = page_rec.getString("documentId");
 		String collection_name = page_rec.getString("collectionName");
 		if (!volume_id.equals(collection_name)) {
-			volume_id = collection_name+volume_id;
+			volume_id = collection_name+"/"+volume_id;
 		}
 		String page_id_filename = page_rec.getString("pageId");
 		
