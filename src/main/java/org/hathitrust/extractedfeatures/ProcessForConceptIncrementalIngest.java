@@ -35,15 +35,12 @@ public class ProcessForConceptIncrementalIngest
 	protected String _whitelist_filename;
 	protected String _langmap_directory;
 	
-	//protected String _solr_url;
-	protected String _output_dir;
-	
 	protected int    _verbosity;
 
-	public ProcessForConceptIncrementalIngest(String input_file, String solr_collection,
-									  String solr_base_url, String output_dir, int verbosity)
+	public ProcessForConceptIncrementalIngest(String json_oneliners, String solr_collection,
+									  String solr_base_url, int verbosity)
 	{
-		_json_concept_oneliners_filename = input_file;
+		_json_concept_oneliners_filename = json_oneliners;
 		_solr_collection = solr_collection;
 		
 		boolean use_whitelist = Boolean.getBoolean("wcsa-ef-ingest.use-whitelist");
@@ -54,7 +51,6 @@ public class ProcessForConceptIncrementalIngest
 		
 		
 		_solr_base_url   = solr_base_url;
-		_output_dir = output_dir;
 		_verbosity  = verbosity;
 	}
 
@@ -65,10 +61,6 @@ public class ProcessForConceptIncrementalIngest
 
 		if (_solr_base_url != null) { 
 			app_name += " solr_base_url=" + _solr_base_url;
-		}
-		
-		if (_output_dir != null) { 
-			app_name += " output_dir=" + _output_dir;
 		}
 		
 		return app_name;
@@ -178,7 +170,7 @@ public class ProcessForConceptIncrementalIngest
 		
 		//System.out.println("*** away to create PerVolumeJSON class, _langmap_directory = " + _langmap_directory);
 		PerPageConceptsJSON per_page_json_concepts = new PerPageConceptsJSON(_json_concept_oneliners_filename,_whitelist_filename, _langmap_directory,
-											           solr_endpoints,_output_dir,_verbosity,
+											           solr_endpoints,_verbosity,
 											           icu_tokenize,strict_file_io);
 		
 		JavaRDD<Integer> per_page_count = json_concepts_data_rp.map(per_page_json_concepts);
@@ -214,11 +206,6 @@ public class ProcessForConceptIncrementalIngest
 		properties_opt.setRequired(false);
 		options.addOption(properties_opt);
 		
-		Option output_dir_opt = new Option("o", "output-dir", true, 
-				"If specified, save BZipped Solr JSON files to this directory");
-		output_dir_opt.setRequired(false);
-		options.addOption(output_dir_opt);
-		
 		Option solr_base_url_opt = new Option("u", "solr-base-url", true, 
 				"If specified, the base URL to post the Solr JSON data to");
 		solr_base_url_opt.setRequired(false);
@@ -229,9 +216,14 @@ public class ProcessForConceptIncrementalIngest
 		read_only_opt.setRequired(false);
 		options.addOption(read_only_opt);
 		
+		Option json_oneliners_opt = new Option("j", "json-oneliners", false, 
+				"The file containing the concepts (one-per line in JSON format) to be processed");
+		json_oneliners_opt.setRequired(true);
+		options.addOption(json_oneliners_opt);
+		
 		// Need to work with CLI v1.2 as this is the JAR that is bundled with Hadoop/Spark 
 		CommandLineParser parser = new GnuParser(); 
-		//CommandLineParser parser = new DefaultParser(); // if working with CLI v1.3 and above
+		//CommandLineParser parser = new DefaultParser(); // if working with CLI v1.3 and above (possible with shadowing)
 		
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLine cmd = null;
@@ -250,18 +242,20 @@ public class ProcessForConceptIncrementalIngest
 		int verbosity = Integer.parseInt(verbosity_str);
 
 		String property_filename = cmd.getOptionValue("properties",null);
-	
-		String output_dir = cmd.getOptionValue("output-dir",null);
-		String solr_base_url   = cmd.getOptionValue("solr-base-url",null);
-		boolean read_only   = cmd.hasOption("read-only");
+		String solr_base_url     = cmd.getOptionValue("solr-base-url",null);
+		boolean read_only        = cmd.hasOption("read-only");
+		
+		String json_oneliners = cmd.getOptionValue("json-oneliners",null);
 		
 		String[] filtered_args = cmd.getArgs();
 
-		if (filtered_args.length != 2) {
+		if (filtered_args.length != 1) {
 			print_usage(formatter,options);
 			System.exit(1);
 		}
 	
+		String solr_collection = filtered_args[0];
+		
 		if (property_filename != null) {
 			try {
 				FileInputStream fis = new FileInputStream(property_filename);
@@ -279,22 +273,21 @@ public class ProcessForConceptIncrementalIngest
 			}
 		}
 		
-		if (!read_only && ((output_dir == null) && (solr_base_url==null))) {
-			System.err.println("Need to specify either --solr-base-url or --output-dir otherwise generated files are not ingested/saved");
+		if (read_only) {
+			// If read_only ensure solr-url is null
+			solr_base_url = null;
+		}
+		else if (solr_base_url==null) {
+			// Not read_only, but no solr_base_url has been set
+			System.err.println("Need to specify --solr-base-url otherwise no data is ingested");
 			print_usage(formatter,options);
 			System.exit(1);
 		}
-		if (read_only) {
-			// For this case, need to ensure solr-url and output-dir are null
-			output_dir = null;
-			solr_base_url = null;
-		}
-		
-		String input_file  = filtered_args[0];
-		String solr_collection = filtered_args[1];
+
+	
 		
 		ProcessForConceptIncrementalIngest prep_for_inc_ingest 
-			= new ProcessForConceptIncrementalIngest(input_file,solr_collection,solr_base_url,output_dir,verbosity);
+			= new ProcessForConceptIncrementalIngest(json_oneliners,solr_collection,solr_base_url,verbosity);
 			
 		prep_for_inc_ingest.execPerPageJSONFile();
 		

@@ -37,7 +37,7 @@ public class PerPageConceptsJSON implements Function<String,Integer>
 	boolean _strict_file_io;
 
 	public PerPageConceptsJSON(String input_dir, String whitelist_filename, String langmap_directory,
-				         ArrayList<String> solr_endpoints, String output_dir, int verbosity, 
+				         ArrayList<String> solr_endpoints, int verbosity, 
 					     boolean icu_tokenize, boolean strict_file_io)
 	{
 		System.out.println("*** PerVolumeUtil Constructor, langmap_directory = " + langmap_directory);
@@ -49,8 +49,6 @@ public class PerPageConceptsJSON implements Function<String,Integer>
 		_solr_endpoints = solr_endpoints;
 		_solr_endpoints_len = solr_endpoints.size();
 		
-		//_solr_url   = solr_url;
-		_output_dir = output_dir;
 		_verbosity  = verbosity;
 		
 		_icu_tokenize   = icu_tokenize;
