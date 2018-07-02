@@ -249,8 +249,8 @@ public class PerVolumeUtil implements Serializable
 				SolrDocJSON.postSolrDoc(solr_url, solr_update_concept_metadata_doc_json, volume_id, page_id);
 				
 				// Send explicit commitWithin
-				JSONObject solr_commitwithin_json = SolrDocJSON.explicitCommitWithin();
-				SolrDocJSON.postSolrDoc(solr_url, solr_commitwithin_json, volume_id, page_id);
+				//JSONObject solr_commitwithin_json = SolrDocJSON.explicitCommitWithin();
+				//SolrDocJSON.postSolrDoc(solr_url, solr_commitwithin_json, volume_id, page_id);
 			}
 		}
 		else {
