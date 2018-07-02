@@ -190,7 +190,7 @@ public class ProcessForConceptIncrementalIngest
 	
 	public static void print_usage(HelpFormatter formatter, Options options)
 	{
-		formatter.printHelp("RUN.bash [options] input-file solr-collection", options);
+		formatter.printHelp("_RUN-WITH-OPTIONS.bash [options] solr-collection", options);
 	}
 	
 	public static void main(String[] args) {
@@ -216,7 +216,7 @@ public class ProcessForConceptIncrementalIngest
 		read_only_opt.setRequired(false);
 		options.addOption(read_only_opt);
 		
-		Option json_oneliners_opt = new Option("j", "json-oneliners", false, 
+		Option json_oneliners_opt = new Option("j", "json-oneliners", true, 
 				"The file containing the concepts (one-per line in JSON format) to be processed");
 		json_oneliners_opt.setRequired(true);
 		options.addOption(json_oneliners_opt);
@@ -250,6 +250,7 @@ public class ProcessForConceptIncrementalIngest
 		String[] filtered_args = cmd.getArgs();
 
 		if (filtered_args.length != 1) {
+			System.err.println("Expected single Solr collection name after optional minus arguments");
 			print_usage(formatter,options);
 			System.exit(1);
 		}
