@@ -784,7 +784,7 @@ public class SolrDocJSON {
 			field_update_mode.put(update_mode, field_vals);
 			
 			if (is_page_level) {
-				update_field_keys.put("volume"+metadata_key+"_txt",field_update_mode);
+			    update_field_keys.put("volume"+metadata_key+"_txt",field_update_mode);
 				update_field_keys.put("volume"+metadata_key+"_htrcstrings",field_update_mode);
 			}
 			else {
