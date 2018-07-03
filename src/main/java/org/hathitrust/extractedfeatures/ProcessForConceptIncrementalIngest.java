@@ -32,23 +32,23 @@ public class ProcessForConceptIncrementalIngest
 	protected String _solr_base_url;
 	protected String _solr_collection;
 	
-	protected String _whitelist_filename;
-	protected String _langmap_directory;
+	//protected String _whitelist_filename;
+	//protected String _langmap_directory;
 	
 	protected int    _verbosity;
 
 	public ProcessForConceptIncrementalIngest(String json_oneliners, String solr_collection,
-									  String solr_base_url, int verbosity)
+									  		  String solr_base_url, int verbosity)
 	{
 		_json_concept_oneliners_filename = json_oneliners;
 		_solr_collection = solr_collection;
-		
+		/*
 		boolean use_whitelist = Boolean.getBoolean("wcsa-ef-ingest.use-whitelist");
 		_whitelist_filename = (use_whitelist) ?  System.getProperty("wcsa-ef-ingest.whitelist-filename") : null;
 		
 		boolean use_langmap = Boolean.getBoolean("wcsa-ef-ingest.use-langmap");
 		_langmap_directory = (use_langmap) ?  System.getProperty("wcsa-ef-ingest.langmap-directory") : null;
-		
+		*/
 		
 		_solr_base_url   = solr_base_url;
 		_verbosity  = verbosity;
@@ -131,20 +131,10 @@ public class ProcessForConceptIncrementalIngest
 	
 	public void execPerPageJSONFile()
 	{
-		// based on execPerVolumeSequenceFile() for Spark configuration using 'call()'
-		// but code to be run in a serial fashion
-		
 		String spark_app_name = generateAppName("Page");		
-		//System.out.println(spark_app_name);
-		
+	
 		SparkConf spark_conf = new SparkConf().setAppName(spark_app_name);
 		JavaSparkContext jsc = new JavaSparkContext(spark_conf);
-		
-		// Read in Capisco JSON concept file
-		//Path json_capisco_concept_path = Paths.get(_json_concept_oneliners_filename);
-		//System.out.println("Processing Capisco concept jsonfile: " + json_capisco_concept_path);
-		//Text json_capisco_concept_text = readJSONText(json_capisco_concept_path);
-		//JSONArray capisco_concepts_page_array  = new JSONArray(json_capisco_concept_text.toString());
 		
 		int files_per_partition = Integer.getInteger("wcsa-ef-ingest.files-per-partition", DEFAULT_FILES_PER_PARTITION);
 		
@@ -161,17 +151,9 @@ public class ProcessForConceptIncrementalIngest
 		JavaRDD<String> json_concepts_data_rp = json_concepts_data.repartition(num_partitions);
 		json_concepts_data_rp.setName("JSON-concept-onliners--repartitioned");
 		
-		// **** can remove the following???
-		boolean icu_tokenize = Boolean.getBoolean("wcsa-ef-ingest.icu-tokenize");
-		boolean strict_file_io = Boolean.getBoolean("wcsa-ef-ingest.strict-file-io");
-		
 		ArrayList<String> solr_endpoints = extrapolateSolrEndpoints(_solr_collection);
 		
-		
-		//System.out.println("*** away to create PerVolumeJSON class, _langmap_directory = " + _langmap_directory);
-		PerPageConceptsJSON per_page_json_concepts = new PerPageConceptsJSON(_json_concept_oneliners_filename,_whitelist_filename, _langmap_directory,
-											           solr_endpoints,_verbosity,
-											           icu_tokenize,strict_file_io);
+		PerPageConceptsJSON per_page_json_concepts = new PerPageConceptsJSON(solr_endpoints,_verbosity);
 		
 		JavaRDD<Integer> per_page_count = json_concepts_data_rp.map(per_page_json_concepts);
 		per_page_count.setName("page-count");
