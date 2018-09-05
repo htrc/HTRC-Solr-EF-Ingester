@@ -545,6 +545,16 @@ public class SolrDocJSON {
 		return tokens;
 	}
 
+	protected static void addToSolrLanguageTextFieldMap(HashMap<String,JSONArray> pos_lang_text_field_map,
+														String pos_lang_text_field, String text_value)
+	{
+		if (!pos_lang_text_field_map.containsKey(pos_lang_text_field)) {
+			JSONArray empty_json_values = new JSONArray();
+			pos_lang_text_field_map.put(pos_lang_text_field, empty_json_values);
+		}
+		pos_lang_text_field_map.get(pos_lang_text_field).put(text_value);
+	}
+	
 	protected static void addSolrLanguageTextFields(JSONObject ef_page, ArrayList<POSString> text_al,
 													UniversalPOSLangMap universal_langmap,
 												    JSONObject solr_doc_json)
@@ -569,6 +579,19 @@ public class SolrDocJSON {
 			
 			int text_len = text_al.size();
 			
+			// Used to separate POS languages from non-POS ones (in code below) 
+			// and also index on all EF languages present
+			//
+			// The code now processes POS and non-POS together, and only picks
+			// the language with the highest confidence rating
+			//
+			// Through the subroutines called, the disastrous (!) decision to
+			// apply the English POS model to any language that didn't have its 
+			// own POS model is undone.  Only languages with a valid model got
+			// Lang+POS fields in the Solr index; the other one a single Lang fields
+			// 
+			
+			
 			/*
 			for (int li=0; li<lang_len; li++) {
 				String lang_key = lang_list[li];
@@ -576,6 +599,8 @@ public class SolrDocJSON {
 				if (universal_langmap.containsLanguage(lang_key))
 				{
 				*/
+					// Deal with POS languages and non-POS at the same time
+			
 					HashMap<String,JSONArray> pos_lang_text_field_map = new HashMap<String,JSONArray>();
 					
 					for (int ti=0; ti<text_len; ti++) {
@@ -592,17 +617,28 @@ public class SolrDocJSON {
 							String selected_lang = lang_pos_pair._1;
 							String upos = lang_pos_pair._2;
 							
-							String pos_lang_text_field = selected_lang;
 							if (upos != null) {
-								pos_lang_text_field += "_" + upos; 
+								// POS-tagged language
+								String pos_lang_text_field = selected_lang + "_" + upos + "_htrctokentext";
+								addToSolrLanguageTextFieldMap(pos_lang_text_field_map,pos_lang_text_field,text_value);
 							}
-							pos_lang_text_field += "_htrctokentext";
 							
+							// Even for a POS language we want a non-POS version so we can perform faster searching
+							// when all parts-of-speech are selected by avoiding the need to Boolean AND all the POS terms
+							String non_pos_lang_text_field = selected_lang+  "_htrctokentext";
+							addToSolrLanguageTextFieldMap(pos_lang_text_field_map,non_pos_lang_text_field,text_value);
+							
+							// On top of this, also store text under "alllangs_htrctokentext" field to allow faster 
+							// searching when all POS + all languages is selected
+							String alllangs_text_field = "alllangs_htrctokentext";
+							addToSolrLanguageTextFieldMap(pos_lang_text_field_map,alllangs_text_field,text_value);
+							
+							/*
 							if (!pos_lang_text_field_map.containsKey(pos_lang_text_field)) {
 								JSONArray empty_json_values = new JSONArray();
 								pos_lang_text_field_map.put(pos_lang_text_field, empty_json_values);
 							}
-							pos_lang_text_field_map.get(pos_lang_text_field).put(text_value);
+							pos_lang_text_field_map.get(pos_lang_text_field).put(text_value);*/
 						}
 					}
 
