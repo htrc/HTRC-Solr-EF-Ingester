@@ -1,21 +1,15 @@
 #!/bin/bash
 
-json_filelist=${1:-full-listing-step100000.txt}
-shift
+seq_file="hdfs:///user/capitanu/data/packed-ef"
 
-input_dir="hdfs://$SPARK_MASTER_HOST:9000/user/dbbridge/packed-full-ef-part-00000"
-#input_dir="hdfs://$SPARK_MASTER_HOST:9000/user/dbbridge/unpacked-ef-10000"
 
-#input_dir="hdfs://$SPARK_MASTER_HOST:9000/user/dbbridge/full-ef-json-files"
-#input_dir="hdfs://$SPARK_MASTER_HOST:9000/tmp/dbbridge/full-ef-json-files"
-#input_dir="hdfs://master:9000/user/htrc/full-ef-json-files"
-#input_dir="hdfs://10.10.0.52:9000/user/htrc/full-ef-json-files"
+# --solr-base-url http://solr1-s:8983/solr
+#    --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties hdfs:///user/capitanu/data/packed-ef faceted-htrc-full-ef20
 
-#output_dir=hdfs://master:9000/user/htrc/full-solr-json-files
-#solr_url="http://gc0:8983/solr/htrc-full-ef/update"
-solr_url="http://solr1-s:8983/solr/htrc-full-ef/update"
 
-# 
+#solr_base_url="http://solr1-s:8983/solr"
+#solr_base_url="http://solr3-s:8983/solr"
+solr_base_url="http://solr1-s/robust-solr"
 
 #master_opt="--driver-memory 50g --executor-memory 12g --conf spark.executor.extraJavaOptions=-XX:+HeapDumpOnOutOfMemoryError --master spark://$SPARK_MASTER_HOST:7077"
 #master_opt="--driver-memory 50g --executor-memory 90g --master spark://$SPARK_MASTER_HOST:7077"
