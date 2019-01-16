@@ -777,18 +777,20 @@ public class SolrDocJSON {
 
 	public static void convertCapiscoConceptsPageTOSolrMetadata(JSONObject page_rec, JSONArray concept_vals_array )
 	{	
-		JSONArray concept_rec_array = page_rec.getJSONArray("concepts");
-		int concept_rec_array_len = concept_rec_array.length();
+		if (page_rec.has("concepts")) {
+			JSONArray concept_rec_array = page_rec.getJSONArray("concepts");
+			int concept_rec_array_len = concept_rec_array.length();
 
-		for (int c=0; c<concept_rec_array_len; c++) {
-			JSONObject concept_rec = concept_rec_array.getJSONObject(c);
+			for (int c=0; c<concept_rec_array_len; c++) {
+				JSONObject concept_rec = concept_rec_array.getJSONObject(c);
 
-			if (concept_rec.has("text")) {
-				String concept_text = concept_rec.getString("text");
-				concept_vals_array.put(concept_text);
-				
-				//String concept_text_unicode = StringEscapeUtils.unescapeJava(concept_text);
-				//concept_vals_array.put(concept_text_unicode);
+				if (concept_rec.has("text")) {
+					String concept_text = concept_rec.getString("text");
+					concept_vals_array.put(concept_text);
+					
+					//String concept_text_unicode = StringEscapeUtils.unescapeJava(concept_text);
+					//concept_vals_array.put(concept_text_unicode);
+				}
 			}
 		}
 	}
