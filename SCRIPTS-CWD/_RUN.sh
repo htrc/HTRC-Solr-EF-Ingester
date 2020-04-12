@@ -124,13 +124,17 @@ if [ "$classmain" = "org.hathitrust.extractedfeatures.ProcessForSolrIngest" ] ||
   fi
 fi
 
+# cmd="$cmd --verbosity 2"
+
 
 if [ "$class_mode" = "seq" ] ; then
     #cmd="$cmd --properties ef-solr.properties $seq_file $*"
-    cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $seq_file $*"
+    #cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $seq_file $*"
+    cmd="$cmd --properties /homea/dbbridge/HTRC-Solr-EF-Setup/HTRC-Solr-EF-Ingester/ef-solr.properties $seq_file $*"
 else
     #cmd="$cmd --properties ef-solr.properties $input_dir $json_filelist $*"
-    cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $input_dir $json_filelist $*"
+    #cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $input_dir $json_filelist $*"
+    cmd="$cmd --properties /homea/dbbridge/HTRC-Solr-EF-Setup/HTRC-Solr-EF-Ingester/ef-solr.properties $input_dir $json_filelist $*"
 
 fi
 

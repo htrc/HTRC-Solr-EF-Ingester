@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-# To work, one of the followlines of  bash variables need to have been set:
+# To work, one of the follow lines of bash variables need to have been set:
 #
 #  $seq_file
 #

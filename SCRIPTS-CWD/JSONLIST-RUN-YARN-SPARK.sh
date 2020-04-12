@@ -24,8 +24,12 @@ fi
 ###solr_url="http://gc0:8983/solr/htrc-full-ef/update"
 ###solr_url="http://solr1-s:8983/solr/htrc-full-ef/update"
 
-#solr_base_url="http://solr1-s:8983/solr"
-solr_base_url="http://solr1-s/robust-solr"
+solr_base_url="http://solr1-s:8983/solr"
+#solr_base_url="http://solr1-s/robust-solr"
+
+echo "****"
+echo "Using solr_base_url: $solr_base_url"
+echo "****"
 
 
 # 

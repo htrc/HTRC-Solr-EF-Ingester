@@ -19,6 +19,11 @@ fi
 echo "Away to incrementally ingest json-onliners '$json_oneliners' into solr collection '$solr_col'"
 
 solr_base_url="http://solr1-s:8983/solr"
+#solr_base_url="http://solr1-s/robust-solr"
+
+echo "****"
+echo "Using solr_base_url: $solr_base_url"
+echo "****"
 
 master_opt="--num-executors 33 --executor-cores 4 --driver-memory 20g --executor-memory 8g --master yarn --deploy-mode cluster"
 
