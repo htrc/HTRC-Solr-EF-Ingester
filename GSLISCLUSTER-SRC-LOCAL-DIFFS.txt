@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/hathitrust/extractedfeatures/PerPageConceptsJSON.java b/src/main/java/org/hathitrust/extractedfeatures/PerPageConceptsJSON.java
+index 4cdb310..6d5fdf8 100755
+--- a/src/main/java/org/hathitrust/extractedfeatures/PerPageConceptsJSON.java
++++ b/src/main/java/org/hathitrust/extractedfeatures/PerPageConceptsJSON.java
+@@ -43,7 +43,8 @@ public class PerPageConceptsJSON implements Function<String,Integer>
+ 		
+ 		String volume_id = page_rec.getString("documentId");
+ 		String collection_name = page_rec.getString("collectionName");
+-		if (!volume_id.equals(collection_name)) {
++		//if (!volume_id.equals(collection_name)) {
++		if (collection_name.endsWith(":")) { // sign of old bug in concept JSON data where full HT ID is split across vol and col fields
+ 			volume_id = collection_name+"/"+volume_id;
+ 		}
+ 		String page_id_filename = page_rec.getString("pageId");
+diff --git a/src/main/java/org/hathitrust/extractedfeatures/PerVolumeUtil.java b/src/main/java/org/hathitrust/extractedfeatures/PerVolumeUtil.java
+index ebfd30d..a0c5262 100755
+--- a/src/main/java/org/hathitrust/extractedfeatures/PerVolumeUtil.java
++++ b/src/main/java/org/hathitrust/extractedfeatures/PerVolumeUtil.java
+@@ -214,7 +214,8 @@ public class PerVolumeUtil implements Serializable
+ 		
+ 		String volume_id = page_rec.getString("documentId");
+ 		String collection_name = page_rec.getString("collectionName");
+-		if (!volume_id.equals(collection_name)) {
++		//if (!volume_id.equals(collection_name)) {
++		if (collection_name.endsWith(":")) { // sign of old bug in concept JSON data where full HT ID is split across vol and col fields
+ 			volume_id = collection_name+"/"+volume_id;
+ 		}
+ 		String page_id_filename = page_rec.getString("pageId");
