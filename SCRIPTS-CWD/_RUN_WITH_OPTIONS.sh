@@ -160,7 +160,7 @@ fi
 cmd="$cmd $solr_col $*"
 
 echo "****"
-echo "* Lauching:"
+echo "* Launching:"
 echo "*   $cmd"
 echo "****"
 

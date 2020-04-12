@@ -135,7 +135,7 @@ else
 fi
 
 echo "****"
-echo "* Lauching:"
+echo "* Launching:"
 echo "*   $cmd"
 echo "****"
 
