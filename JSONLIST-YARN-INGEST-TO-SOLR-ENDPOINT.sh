@@ -71,7 +71,8 @@ if [ -f "nohup.out" ] ; then
 	    exit -1
 	fi
 	if [ "$rm_nohup_ans" = "y" ] ; then
-	    /bin/rm nohup.out
+	    echo "Deleting nohup.out"
+	    /bin/rm -f nohup.out
 	fi
     fi
        
