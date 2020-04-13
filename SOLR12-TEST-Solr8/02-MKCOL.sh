@@ -12,7 +12,7 @@ echo "#"
 echo "# First checking if collection '$solrcol' already exists: "
 
 solr_cmd="$solradminurl/collections?action=list"
-col_exists=`wget -q "$solr_cmd" -O - \
+col_exists=`wget $opt_authenticate -q "$solr_cmd" -O - \
     | python -c "import sys, json; cols=json.load(sys.stdin)['collections']; print '$solrcol' in cols" `
 
 if [ "x$col_exists" != "x" ] ; then
@@ -28,4 +28,4 @@ fi
 echo ""
 
 
-wget "$solradminurl/collections?action=CREATE&name=$solrcol&numShards=$solrShardCount&replicationFactor=$solrReplCount&collection.configName=$solrconfig" -O -
+wget $opt_authenticate "$solradminurl/collections?action=CREATE&name=$solrcol&numShards=$solrShardCount&replicationFactor=$solrReplCount&collection.configName=$solrconfig" -O -

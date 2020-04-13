@@ -26,3 +26,16 @@ solrbaseurl="http://solr1-s:9983/solr"
 solradminurl="$solrbaseurl/admin"
 
 
+if [ -f _password.in ] && [ ! -f _password ] ; then
+    echo "****" >&2
+    echo "* The admin UI to the Solr/Jetty server is password protected" >&2
+    echo "* Copy _password.in to _password and replace with the 'admin' password for the Solr admin UI" >&2
+    echo "****" >&2
+    exit -1
+else
+    solradminuser="admin"
+    solradminpass=`cat _password`
+
+    opt_authenticate="--auth-no-challenge --http-user=$solradminuser --http-passwd=$solradminpass"
+fi
+
