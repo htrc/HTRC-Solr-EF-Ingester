@@ -32,7 +32,7 @@ solr_cmd="$solr_admin_url/collections?action=list"
 
 echo "#"
 echo "# Checking if collection '$solr_col' exists: "
-col_exists=`wget -q "$solr_cmd" -O - \
+col_exists=`wget $OPT_WGET_AUTHENTICATE -q "$solr_cmd" -O - \
     | python -c "import sys, json; cols=json.load(sys.stdin)['collections']; print '$solr_col' in cols" `
 
 if [ "x$col_exists" != "x" ] ; then
