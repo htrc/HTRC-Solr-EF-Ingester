@@ -12,6 +12,7 @@
 #
 #  FULL-RUN-YARN-SPARK.sh
 
+HTRC_SOLR_EF_INGESTER_HOME=`pwd`
 
 show_usage=1
 class_mode=""
@@ -126,16 +127,33 @@ fi
 
 # cmd="$cmd --verbosity 2"
 
+spark_solr_ef_propfile="$HTRC_SOLR_EF_INGESTER_HOME/spark-solr-ef.properties"
+spark_solr_ef_propfile_in="$spark_solr_ef_propfile.in"
+# Replace this copy with a 'sed' set of substitues
+/bin/cp "$spark_solr_ef_propfile_in" "$spark_solr_ef_propfile"
+
+echo "****"
+echo "* Cloud node Solr endpoint operation"
+
+solr_cloud_endpoint_operation_output=`fgrep wcsa-ef-ingest.solr-cloud-nodes "$spark_solr_ef_propfile"`
+echo "=="
+echo $solr_cloud_endpoint_operation_output
+echo "=="
+
+
+cmd="$cmd --properties $spark_solr_ef_propfile"
+
 
 if [ "$class_mode" = "seq" ] ; then
-    #cmd="$cmd --properties ef-solr.properties $seq_file $*"
-    #cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $seq_file $*"
-    cmd="$cmd --properties /homea/dbbridge/HTRC-Solr-EF-Setup/HTRC-Solr-EF-Ingester/ef-solr.properties $seq_file $*"
+    ##cmd="$cmd --properties ef-solr.properties $seq_file $*"
+    ##cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $seq_file $*"
+    #cmd="$cmd --properties /homea/dbbridge/HTRC-Solr-EF-Setup/HTRC-Solr-EF-Ingester/ef-solr.properties $seq_file $*"
+    cmd="$cmd $seq_file $*"
 else
-    #cmd="$cmd --properties ef-solr.properties $input_dir $json_filelist $*"
-    #cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $input_dir $json_filelist $*"
-    cmd="$cmd --properties /homea/dbbridge/HTRC-Solr-EF-Setup/HTRC-Solr-EF-Ingester/ef-solr.properties $input_dir $json_filelist $*"
-
+    ##cmd="$cmd --properties ef-solr.properties $input_dir $json_filelist $*"
+    ##cmd="$cmd --properties /homea/dbbridge/extracted-features-solr/solr-ingest/ef-solr.properties $input_dir $json_filelist $*"
+    #cmd="$cmd --properties /homea/dbbridge/HTRC-Solr-EF-Setup/HTRC-Solr-EF-Ingester/ef-solr.properties $input_dir $json_filelist $*"
+    cmd="$cmd  $input_dir $json_filelist $*"
 fi
 
 echo "****"
