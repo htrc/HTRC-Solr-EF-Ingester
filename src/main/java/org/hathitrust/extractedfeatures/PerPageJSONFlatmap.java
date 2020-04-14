@@ -31,6 +31,8 @@ class PerPageJSONFlatmap implements FlatMapFunction<String, JSONObject>
 	
 	protected int    _verbosity;
 	
+	protected SolrDocJSON _solr_doc_json;
+	
 	protected WhitelistBloomFilter _whitelist_bloomfilter;
 	protected UniversalPOSLangMap _universal_langmap = null;
 	
@@ -57,6 +59,8 @@ class PerPageJSONFlatmap implements FlatMapFunction<String, JSONObject>
 		
 		_icu_tokenize   = icu_tokenize;
 		_strict_file_io = strict_file_io;
+		
+		_solr_doc_json = new SolrDocJSONEF1p5(); // EF 1.5
 		
 		_whitelist_bloomfilter = null;
 	}
@@ -136,7 +140,7 @@ class PerPageJSONFlatmap implements FlatMapFunction<String, JSONObject>
 				if (ef_page != null) {
 					// Convert to Solr add form
 					JSONObject solr_add_doc_json 
-						= SolrDocJSON.generateSolrDocJSON(volume_id, page_id, ef_metadata, ef_page, 
+						= _solr_doc_json.generateSolrDocJSON(volume_id, page_id, ef_metadata, ef_page, 
 													_whitelist_bloomfilter, _universal_langmap,
 													_icu_tokenize);
 					solr_add_doc_json.put("filename_json_bz2", output_json_bz2);

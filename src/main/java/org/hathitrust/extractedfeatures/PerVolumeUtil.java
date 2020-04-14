@@ -19,6 +19,7 @@ import org.json.JSONObject;
 public class PerVolumeUtil implements Serializable
 {
 	private static final long serialVersionUID = 1L;
+
 	protected String _input_dir;
 	protected String _whitelist_filename;
 	protected String _langmap_directory;
@@ -29,6 +30,8 @@ public class PerVolumeUtil implements Serializable
 	protected String _output_dir;
 	
 	protected int    _verbosity;
+
+	protected SolrDocJSON _solr_doc_json;
 	
 	protected WhitelistBloomFilter _whitelist_bloomfilter;
 	protected UniversalPOSLangMap _universal_langmap;
@@ -55,6 +58,8 @@ public class PerVolumeUtil implements Serializable
 		
 		_icu_tokenize   = icu_tokenize;
 		_strict_file_io = strict_file_io;
+		
+		_solr_doc_json = new SolrDocJSONEF1p5(); // EF 1.5
 		
 		_whitelist_bloomfilter = null;
 		_universal_langmap = null;
@@ -109,7 +114,7 @@ public class PerVolumeUtil implements Serializable
 				//
 				// Top-level metadata Solr doc
 				//
-				JSONObject solr_add_metadata_doc_json = SolrDocJSON.generateToplevelMetadataSolrDocJSON(volume_id,ef_metadata);
+				JSONObject solr_add_metadata_doc_json = _solr_doc_json.generateToplevelMetadataSolrDocJSON(volume_id,ef_metadata);
 				if (solr_add_metadata_doc_json != null) {
 				
 					if ((_verbosity >=2)) {
@@ -162,7 +167,7 @@ public class PerVolumeUtil implements Serializable
 						if (ef_page != null) {
 							// Convert to Solr add form
 							JSONObject solr_add_doc_json 
-							= SolrDocJSON.generateSolrDocJSON(volume_id, page_id, 
+							= _solr_doc_json.generateSolrDocJSON(volume_id, page_id, 
 												ef_metadata, ef_page,
 												_whitelist_bloomfilter, _universal_langmap, _icu_tokenize);
 
