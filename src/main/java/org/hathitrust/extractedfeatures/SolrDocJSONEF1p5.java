@@ -261,99 +261,155 @@ public class SolrDocJSONEF1p5 extends SolrDocJSON
 
 	}
 			
-	protected JSONObject generateSolrDocJSON(String volume_id, String page_id, 
-												    JSONObject ef_metadata, JSONObject ef_page,
-											        WhitelistBloomFilter whitelist_bloomfilter, 
-											        UniversalPOSLangMap universal_langmap,
-											        boolean icu_tokenize) 
+	public ArrayList<String> generateTokenPosCountLangLabels(String volume_id, String page_id, JSONObject ef_page)
 	{
-		JSONObject solr_update_json = null;
-		
+		ArrayList<String> lang_list = new ArrayList<String>();;
+
 		if (ef_page != null) {
-			JSONObject ef_body = ef_page.getJSONObject("body");
-			if (ef_body != null) {
-				JSONObject ef_token_pos_count = ef_body.getJSONObject("tokenPosCount");
-				if (ef_token_pos_count != null) {
-	
-					JSONObject solr_add_json = new JSONObject();
-					
-					ArrayList<POSString> text_al = filterSolrTextFields(ef_token_pos_count,page_id,whitelist_bloomfilter,universal_langmap,icu_tokenize);
-					
-					//JSONObject solr_doc_json = new JSONObject();
-					JSONObject solr_doc_json = generateMetadataSolrDocJSON(page_id,ef_metadata,true);
-					
-					//solr_doc_json.put("id", page_id); // now done in generateMetadataSolrDocJSON
-					solr_doc_json.put("volumeid_s", volume_id);
-					
-					if (text_al.size()>0) {
-						addSolrLanguageTextFields(ef_page,text_al, universal_langmap, solr_doc_json);
-						//solr_doc_json.put("eftext_txt", text_al.toString()); // ****
+			JSONArray ef_languages = ef_page.getJSONArray("languages");
+			if (ef_languages != null) {
+				
+				int lang_len = ef_languages.length();
+				for (int i=0; i<lang_len; i++) {
+					JSONObject lang_rec = ef_languages.getJSONObject(i);
+
+					Iterator<String> lang_key_iter = lang_rec.keys();
+					while (lang_key_iter.hasNext()) {
+						String lang_label = lang_key_iter.next();
+
+						lang_list.add(lang_label);
 					}
-					else {
-						solr_doc_json.put("efnotext_b", true);
-					}
-					solr_add_json.put("commitWithin", 60000); // used to be 5000
-					solr_add_json.put("doc", solr_doc_json);
-					
-					solr_update_json = new JSONObject();
-					solr_update_json.put("add",solr_add_json);
-					
-				}
-				else {
-					System.err.println("Warning: empty tokenPosCount field for '" + page_id + "'");
 				}
 			}
 			else {
-				System.err.println("Warning: empty body field for '" + page_id + "'");
+				System.err.println("Warning: empty languages field for '" + page_id + "'");
 			}
-			
+
 		}
 		else {
 			System.err.println("Warning: null page for '" + page_id + "'");
 		}
-		
-	    /*
-	     /update/json/docs
-	     */
-	    
-		// For Reference ...
-		// Example documentation on Solr JSON syntax:
-		//   https://cwiki.apache.org/confluence/display/solr/Uploading+Data+with+Index+Handlers
-		//     #UploadingDatawithIndexHandlers-JSONFormattedIndexUpdates
-		
-		/*
-		curl -X POST -H 'Content-Type: application/json' 'http://localhost:8983/solr/my_collection/update' --data-binary '
-		{
-		  "add": {
-		    "doc": {
-		      "id": "DOC1",
-		      "my_boosted_field": {         use a map with boost/value for a boosted field 
-		        "boost": 2.3,
-		        "value": "test"
-		      },
-		      "my_multivalued_field": [ "aaa", "bbb" ]    Can use an array for a multi-valued field 
-		    }
-		  },
-		  "add": {
-		    "commitWithin": 5000,           commit this document within 5 seconds 
-		    "overwrite": false,             don't check for existing documents with the same uniqueKey 
-		    "boost": 3.45,                  a document boost 
-		    "doc": {
-		      "f1": "v1",                   Can use repeated keys for a multi-valued field 
-		      "f1": "v2"
-		    }
-		  },
-		 
-		  "commit": {},
-		  "optimize": { "waitSearcher":false },
-		 
-		  "delete": { "id":"ID" },          delete by ID 
-		  "delete": { "query":"QUERY" }     delete by query 
-		}'
-		*/
-		
-		return solr_update_json;
-	}
 
+		return lang_list;
+	}
+	
+
+
+	    
+	protected void addSolrLanguageTextFields(JSONObject ef_page, ArrayList<POSString> text_al,
+													UniversalPOSLangMap universal_langmap,
+												    JSONObject solr_doc_json)
+	{
+		// e.g. ... "languages":[{"ko":"0.71"},{"ja":"0.29"}]
+		JSONArray ef_languages = ef_page.getJSONArray("languages");
+		if ((ef_languages != null) && (ef_languages.length()>0)) {
+			
+			int lang_len = ef_languages.length();
+			String [] lang_list = new String[lang_len];
+			
+			for (int i=0; i<lang_len; i++) {
+				JSONObject lang_rec = ef_languages.getJSONObject(i);
+
+				Iterator<String> lang_key_iter = lang_rec.keys();
+				while (lang_key_iter.hasNext()) {
+					String lang_label = lang_key_iter.next();
+
+					lang_list[i] = lang_label;
+				}
+			}
+			
+			int text_len = text_al.size();
+			
+			// Used to separate POS languages from non-POS ones (in code below) 
+			// and also index on all EF languages present
+			//
+			// The code now processes POS and non-POS together, and only picks
+			// the language with the highest confidence rating
+			//
+			// Through the subroutines called, the disastrous (!) decision to
+			// apply the English POS model to any language that didn't have its 
+			// own POS model is undone.  Only languages with a valid model got
+			// Lang+POS fields in the Solr index; the other one a single Lang fields
+			// 
+			
+			
+			/*
+			for (int li=0; li<lang_len; li++) {
+				String lang_key = lang_list[li];
+				
+				if (universal_langmap.containsLanguage(lang_key))
+				{
+				*/
+					// Deal with POS languages and non-POS at the same time
+			
+					HashMap<String,JSONArray> pos_lang_text_field_map = new HashMap<String,JSONArray>();
+					
+					for (int ti=0; ti<text_len; ti++) {
+						POSString pos_text_value = text_al.get(ti);
+						String text_value = pos_text_value.getString();
+						
+						String[] pos_tags = pos_text_value.getPOSTags();
+						int pos_tags_len = pos_tags.length;
+						
+						for (int pti=0; pti<pos_tags_len; pti++) {
+							String opennlp_pos_key = pos_tags[pti];
+							
+							Tuple2<String,String> lang_pos_pair = universal_langmap.getUniversalLanguagePOSPair(lang_list, opennlp_pos_key);
+							String selected_lang = lang_pos_pair._1;
+							String upos = lang_pos_pair._2;
+							
+							if (upos != null) {
+								// POS-tagged language
+								String pos_lang_text_field = selected_lang + "_" + upos + "_htrctokentext";
+								addToSolrLanguageTextFieldMap(pos_lang_text_field_map,pos_lang_text_field,text_value);
+							}
+							
+							// Even for a POS language we want a non-POS version so we can perform faster searching
+							// when all parts-of-speech are selected by avoiding the need to Boolean AND all the POS terms
+							String non_pos_lang_text_field = selected_lang+  "_htrctokentext";
+							addToSolrLanguageTextFieldMap(pos_lang_text_field_map,non_pos_lang_text_field,text_value);
+							
+							// On top of this, also store text under "alllangs_htrctokentext" field to allow faster 
+							// searching when all POS + all languages is selected
+							String alllangs_text_field = "alllangs_htrctokentext";
+							addToSolrLanguageTextFieldMap(pos_lang_text_field_map,alllangs_text_field,text_value);
+							
+							/*
+							if (!pos_lang_text_field_map.containsKey(pos_lang_text_field)) {
+								JSONArray empty_json_values = new JSONArray();
+								pos_lang_text_field_map.put(pos_lang_text_field, empty_json_values);
+							}
+							pos_lang_text_field_map.get(pos_lang_text_field).put(text_value);*/
+						}
+					}
+
+					// Now add each of the POS language fields into solr_doc_json
+					Set<String> pos_lang_field_keys = pos_lang_text_field_map.keySet();
+					for (String plf_key : pos_lang_field_keys) {
+						String lang_text_field = plf_key;
+						JSONArray json_values = pos_lang_text_field_map.get(plf_key);
+						
+						solr_doc_json.put(lang_text_field, json_values); 
+					}
+					/*
+				}
+				else {
+					String lang_text_field = lang_key + "_htrctokentext";
+					
+					JSONArray json_values = new JSONArray();
+					for (int ti=0; ti<text_len; ti++) {
+						POSString pos_text_value = text_al.get(ti);
+						String text_value = pos_text_value.getString();
+						json_values.put(text_value);
+					}
+					solr_doc_json.put(lang_text_field, json_values); 
+					
+				}
+				
+				
+			}
+			*/
+		}
+	}
     
 }

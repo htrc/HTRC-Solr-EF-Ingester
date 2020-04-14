@@ -16,6 +16,8 @@ class PerVolumeLangStreamFlatmap implements FlatMapFunction<String, String>
 	protected String _input_dir;
 	protected int    _verbosity;
 	
+	SolrDocJSON _solr_doc_json;
+	
 	protected DoubleAccumulator _progress_accum;
 	protected double            _progress_step;
 	
@@ -27,6 +29,8 @@ class PerVolumeLangStreamFlatmap implements FlatMapFunction<String, String>
 	{
 		_input_dir  = input_dir;
 		_verbosity  = verbosity;
+		
+		_solr_doc_json = new SolrDocJSONEF1p5();
 		
 		_progress_accum = progress_accum;
 		_progress_step  = progress_step;
@@ -86,7 +90,7 @@ class PerVolumeLangStreamFlatmap implements FlatMapFunction<String, String>
 
 				if (ef_page != null) {
 					
-					ArrayList<String> page_lang_labels = SolrDocJSON.generateTokenPosCountLangLabels(volume_id, page_id, ef_page);					
+					ArrayList<String> page_lang_labels = _solr_doc_json.generateTokenPosCountLangLabels(volume_id, page_id, ef_page);					
 					all_lang_list.addAll(page_lang_labels);
 				}
 				else {

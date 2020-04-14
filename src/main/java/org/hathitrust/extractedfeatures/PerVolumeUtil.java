@@ -73,23 +73,23 @@ public class PerVolumeUtil implements Serializable
 	public Integer call(Text json_text) throws IOException
 
 	{ 
-	        if (_whitelist_filename != null) {
+		if (_whitelist_filename != null) {
 
-		    synchronized (_whitelist_filename) {
-			if (_whitelist_bloomfilter == null) {
-			    
-			    _whitelist_bloomfilter = new WhitelistBloomFilter(_whitelist_filename,true);
+			synchronized (_whitelist_filename) {
+				if (_whitelist_bloomfilter == null) {
+
+					_whitelist_bloomfilter = new WhitelistBloomFilter(_whitelist_filename,true);
+				}
 			}
-		    }
 		}
 		
 		if (_langmap_directory != null) {
 
-		    synchronized (_langmap_directory) {
-			if (_universal_langmap == null) {
-			    _universal_langmap = new UniversalPOSLangMap(_langmap_directory);
+			synchronized (_langmap_directory) {
+				if (_universal_langmap == null) {
+					_universal_langmap = new UniversalPOSLangMapOpenNLP(_langmap_directory);
+				}
 			}
-		    }
 		}
 
 		int ef_num_pages = 0;
@@ -101,7 +101,6 @@ public class PerVolumeUtil implements Serializable
 		}
 		
 		try {
-
 
 			JSONObject extracted_feature_record  = new JSONObject(json_text.toString());
 
