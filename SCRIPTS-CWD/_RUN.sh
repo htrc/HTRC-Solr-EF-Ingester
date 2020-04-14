@@ -125,7 +125,12 @@ if [ "$classmain" = "org.hathitrust.extractedfeatures.ProcessForSolrIngest" ] ||
   fi
 fi
 
+#
 # cmd="$cmd --verbosity 2"
+#
+
+# Generate properties file for this invokation from template file
+# 
 
 spark_solr_ef_propfile="$HTRC_SOLR_EF_INGESTER_HOME/spark-solr-ef.properties"
 spark_solr_ef_propfile_in="$spark_solr_ef_propfile.in"
