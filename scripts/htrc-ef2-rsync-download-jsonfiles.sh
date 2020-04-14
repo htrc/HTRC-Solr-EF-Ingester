@@ -11,4 +11,4 @@ fi
 echo "Getting EF2 json.bz2 files listed in: $input_file"
 echo "Downloading them to: $output_dir"
 
-rsync -av --files-from $input_file queenpalm.ischool.illinois.edu::features-2020.03/ $output_dir
+rsync -av --progress --files-from $input_file queenpalm.ischool.illinois.edu::features-2020.03/ $output_dir
