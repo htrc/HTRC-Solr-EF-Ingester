@@ -7,14 +7,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+//import java.util.Base64;
+import org.apache.commons.codec.binary.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
-
+import java.nio.charset.StandardCharsets;
+    
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.json.JSONArray;
@@ -29,7 +33,7 @@ import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 
-public abstract class SolrDocJSON {
+public abstract class SolrDocJSON implements Serializable {
 
 	protected String [] metadata_single = null;
 	protected String [] metadata_multiple = null;
@@ -745,6 +749,7 @@ public abstract class SolrDocJSON {
 		try {
 			HttpURLConnection httpcon = (HttpURLConnection) ((new URL(post_url).openConnection()));
 			httpcon.setDoOutput(true);
+			
 			httpcon.setRequestProperty("Content-Type", "application/json");
 			httpcon.setRequestProperty("Accept", "application/json");
 			httpcon.setRequestMethod("POST");
