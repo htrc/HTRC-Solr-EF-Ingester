@@ -145,14 +145,16 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				//"pubPlace",		 		/* retains name, but now RDF triple {id, name, type} */
 				//"rightsAttributes",		    /* now 'accessRights */
 				"schemaVersion",		    /* retained but string ("1.3") now full URI */
-				//"sourceInstitution",      /* gone */
+				//"sourceInstitution",      /* changes from string to [name,type]
 				//"sourceInstitutionRecordNumber",
 				"title",
-				"type",						// *URI* version, rename of 'typeOfResource', 
 				//"typeOfResource",			/* now 'type' and a full URI
 				//"volumeIdentifier"        /* gone, but be auto-populated from tail substring of full Handle URI version in 'id'
 		};
 
+		// !!!
+		// "type",						// *URI* version, rename of 'typeOfResource' and "" to e.g. [DataFeedItem,Book]
+		
 		metadata_multiple = new String[] {
 				//"oclc",
 				//"isbn",
