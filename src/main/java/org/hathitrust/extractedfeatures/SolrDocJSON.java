@@ -35,13 +35,19 @@ import org.apache.lucene.analysis.core.LowerCaseFilter;
 
 public abstract class SolrDocJSON implements Serializable {
 
-	protected String [] metadata_single = null;
+	protected String [] metadata_single_string = null;
 	protected String [] metadata_multiple = null;
-	protected String [] metadata_hashmap_multiple = null;
+
 	
 	public SolrDocJSON()
 	{
 	}
+	
+
+
+
+
+	
 	
 	abstract protected JSONObject generateMetadataSolrDocJSON(String id, JSONObject ef_metadata, boolean is_page_level);
 	

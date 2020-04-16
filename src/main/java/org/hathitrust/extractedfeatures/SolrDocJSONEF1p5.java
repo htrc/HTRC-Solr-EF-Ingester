@@ -103,10 +103,12 @@ public class SolrDocJSONEF1p5 extends SolrDocJSON
 
 	 */
 	
+	protected String [] metadata_hashmap_multiple = null;
+	
 	public SolrDocJSONEF1p5()
 	{
 		
-		metadata_single = new String[] {
+		metadata_single_string = new String[] {
 				"accessProfile",
 				"bibliographicFormat",
 				"dateCreated",              // date
@@ -203,7 +205,7 @@ public class SolrDocJSONEF1p5 extends SolrDocJSON
 		JSONObject solr_doc_json = new JSONObject();
 		solr_doc_json.put("id", id);
 
-		for (String metaname: metadata_single) {
+		for (String metaname: metadata_single_string) {
 			String metavalue = ef_metadata.getString(metaname);
 			
 			if (metavalue != null) {
