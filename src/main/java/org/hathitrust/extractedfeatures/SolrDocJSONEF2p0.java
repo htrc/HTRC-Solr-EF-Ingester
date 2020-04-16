@@ -121,54 +121,123 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 
 	 */
 	
+	protected String[] metadata_single_int = null;
+	protected String[] metadata_single_uri = null;
+	protected String[] metadata_single_id_name_type = null;
+	
 	public SolrDocJSONEF2p0()
 	{
 		
-		metadata_single = new String[] {
+		metadata_single_string = new String[] {
 				"accessProfile",
 				"accessRights", 	        // rename of 'rightsAttribute'
-				// "bibliographicFormat",   /* now 'type' [], e.g. [ "DataFeedItem", "Book" ] */
-/*int*/			"dateCreated",              // changes from string to int
-/*URI*/			"genre",					// previously in metadata_multiple var
-				//"handleUrl",			    /* now 'id' */ 
+				//"handleUrl",			    /* now 'id' but note reason for suppression below*/ 
 				//"hathitrustRecordNumber", /* now appears in 'mainEntityOfPage', URI-field [0] and leading 00 padding */
 				//"htBibUrl",				/* now in 'mainEntityOfPage' URI-field [2] */
-				// "imprint",			    /* now 'publisher' as RDF triple {id, name, type} */
-				//"issuance",
-/* We deliberately exclude 'id' from metadata_single as it is explicitly set in code from 'volume_id' param pass in */
+				//"issuance",			    /* removed in EF2*/
+
+				/* We deliberately exclude 'id' from metadata_single 
+				   as it is explicitly set in code from 'volume_id' param pass in */
 				// "id",    	            // rename of handleUrl, 
+
 				"language",
 				"lastRightsUpdateDate",     // rename of 'lastUpdateDate'
 				//"lastUpdateDate",			/* now 'lastRightsUpdateDate' */
-				"oclc",						// previously in metadata_multiple var
-/*int*/			"pubDate",				    // changes from string to int
-				//"pubPlace",		 		/* retains name, but now RDF triple {id, name, type} */
-				//"rightsAttributes",		    /* now 'accessRights */
-				"schemaVersion",		    /* retained but string ("1.3") now full URI */
-				//"sourceInstitution",      /* changes from string to [name,type]
-				//"sourceInstitutionRecordNumber",
-				"title",
-				//"typeOfResource",			/* now 'type' and a full URI
-				//"volumeIdentifier"        /* gone, but be auto-populated from tail substring of full Handle URI version in 'id'
+				"oclc",						// previously in metadata_multiple var, now a single value in EF2
+				//"rightsAttributes",		/* now 'accessRights */
+				//"sourceInstitutionRecordNumber", /* removed in EF2 */
+				"title"
+
+				//"volumeIdentifier"        /* gone, but could be auto-populated from tail substring of full Handle URI version in 'id'
 		};
 
-		// !!!
-		// "type",						// *URI* version, rename of 'typeOfResource' and "" to e.g. [DataFeedItem,Book]
+		metadata_single_int = new String[] {
+				"dateCreated",              // changes from string to int
+				"pubDate"				    // changes from string to int
+		};
+		
+		metadata_single_uri = new String[] {
+				"schemaVersion",		    /* retained but string ("1.3") now full URI */
+				"typeOfResource",			/* retained but string ("text") now full URI (http://id.loc.gov/ontologies/bibframe/Text) */
+		};
+		
+		metadata_single_id_name_type = new String[] {
+				"publisher",				/* previously 'imprint', but now LOD triple*/
+				"pubPlace",					/* retains name, but now LOD triple */
+		};
 		
 		metadata_multiple = new String[] {
-				//"oclc",
+				//"oclc", /* now a single value */
 				//"isbn",
 				//"issn",
 				//"lccn",
-				//"genre", 	    
-				//"names" /* now 'contributor' in RDF */
-		};
-
-		metadata_hashmap_multiple = new String[] {
-				//"classification"
+/*URI*/			"genre" 	    			// retained, but now URIs
+				//"names" /* now 'contributor' in LOD */
 		};
 		
 	}
+	
+	protected void setSingleValueMetadataForFaceting(boolean is_page_level, JSONObject solr_doc_json, String metaname, String metavalue) 
+	{	
+		if (is_page_level) {
+			// In EF1.5 this used to be _htrcstring, but now prefer _htrcstrings to simplify Solr Query syntax for field searching
+			solr_doc_json.put("volume"+metaname+"_htrcstrings",metavalue); 		
+		}
+		else {
+			// In EF1.5 this used to be _s, but now prefer _ss to simplify Solr Query syntax for field searching
+			solr_doc_json.put(metaname+"_ss",metavalue);
+		}
+	}
+	
+	protected void setSingleValueStringMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, String metavalue) 
+	{
+		if (is_page_level) {
+			solr_doc_json.put("volume"+metaname+"_txt",metavalue); // tokenized but not stored
+			//solr_doc_json.put("volume"+metaname+"_htrcstrings",metavalue); // In EF1.5 this used to be _s, but now prefer _ss to simplify field searching
+		}
+		else {
+			// Want volume-level metadata stored, so can be retrieve in Solr-EF search interface 
+			// => '_t' 
+			solr_doc_json.put(metaname+"_t",metavalue); // tokenized and stored
+			//solr_doc_json.put(metaname+"_ss",metavalue); // In EF1.5 this used to be _s, but now prefer _ss to simplify field searching
+		}
+		
+		setSingleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalue);
+	}
+	
+	protected void setSingleValueIntegerMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, int metavalue_int) 
+	{
+		if (is_page_level) {
+			solr_doc_json.put("volume"+metaname+"_i",metavalue_int); 
+		}
+		else {
+			solr_doc_json.put(metaname+"_i",metavalue_int);
+		}
+		
+		String metavalue_str = Integer.toString(metavalue_int);
+		setSingleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalue_str);	
+	}
+	
+	protected void setSingleValueURIMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, String metavalue_uri) 
+	{
+		// Don't want the URI tokenized in any way, so the _ss or _htrcstrings fields used for faceting
+		// are also what we want for regular searching
+		setSingleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalue_uri);	
+	}
+	
+	
+	protected void setMultipleValueMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, JSONArray metavalues) {
+		// Short-cut => can dump the retrieved JSONArray directly into the SolrDoc JSONObject 
+		if (is_page_level) {
+			solr_doc_json.put("volume"+metaname+"_txt",metavalues);
+			solr_doc_json.put("volume"+metaname+"_htrcstrings",metavalues);
+		}
+		else {
+			solr_doc_json.put(metaname+"_t",metavalues);
+			solr_doc_json.put(metaname+"_ss",metavalues);
+		}
+	}
+	
 	
 	protected JSONObject generateMetadataSolrDocJSON(String id, JSONObject ef_metadata, boolean is_page_level)
 	{
@@ -229,69 +298,84 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		JSONObject solr_doc_json = new JSONObject();
 		solr_doc_json.put("id", id);
 
-		for (String metaname: metadata_single) {
-			String metavalue = null;
-			if (metaname.equals("dateCreated") || metaname.equals("pubDate")) {
-				metavalue = Integer.toString(ef_metadata.getInt(metaname));
-			}
-			else {
-				metavalue = ef_metadata.getString(metaname);
-			}
+		for (String metaname: metadata_single_string) {
+			//String metavalue = null;
+			//if (metaname.equals("dateCreated") || metaname.equals("pubDate")) {
+			//	metavalue = Integer.toString(ef_metadata.getInt(metaname));
+			//}
+			//else {
+			//metavalue = ef_metadata.getString(metaname);
+			//}
 			
-			if (metavalue != null) {
-				if (is_page_level) {
-					solr_doc_json.put("volume"+metaname+"_txt",metavalue);
-					solr_doc_json.put("volume"+metaname+"_htrcstring",metavalue);
-				}
-				else {
-					solr_doc_json.put(metaname+"_t",metavalue);
-					solr_doc_json.put(metaname+"_s",metavalue);
-				}
+			Object metavalue_var = ef_metadata.opt(metaname);
+			if (metavalue_var != null) {
+				//String metavalue = ef_metadata.getString(metaname); 
+				String metavalue_str = (String)metavalue_var;
+				
+				setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
 			}
 		}
+		
+		for (String metaname: metadata_single_int) {
+			Object metavalue_var = ef_metadata.opt(metaname);
+			if (metavalue_var != null) {
+				int metavalue_int = (int)metavalue_var;
+				setSingleValueIntegerMetadata(is_page_level, solr_doc_json, metaname, metavalue_int);
+			}
+		}
+		
+		for (String metaname: metadata_single_uri) {
+			Object metavalue_var = ef_metadata.opt(metaname);
+			if (metavalue_var != null) {
+				String metavalue_uri = (String)metavalue_var;
+				setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname, metavalue_uri);
+			}
+		}
+		
 
 		for (String metaname: metadata_multiple) {
-			JSONArray metavalues = ef_metadata.getJSONArray(metaname);
-			if (metavalues != null) {
-				if (is_page_level) {
-					solr_doc_json.put("volume"+metaname+"_txt",metavalues);
-					solr_doc_json.put("volume"+metaname+"_htrcstrings",metavalues);
+			
+			// Can't do the following:
+			//  JSONArray metavalues = ef_metadata.getJSONArray(metaname);
+			// as the metaname could be an array or string
+			// => Take a more step-wise approach
+			
+			Object metavalues_var = ef_metadata.opt(metaname); // returns null if does not exist
+			if (metavalues_var != null) {
+				
+				if (metavalues_var instanceof JSONArray) {
+					JSONArray metavalues = (JSONArray)metavalues_var;
+					//setMultipleValueMetadata(is_page_level, solr_doc_json, metaname, metavalues);
+				}
+				else if (metavalues_var instanceof String) {
+					// Single value case in string format
+					String metavalue = (String)metavalues_var;
+					//setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue);
 				}
 				else {
-					solr_doc_json.put(metaname+"_t",metavalues);
-					solr_doc_json.put(metaname+"_ss",metavalues);
+					// Unrecognized JSON type for field 'metaname'
+					System.err.println("SolrDocJSON2p1::generateMetadataSolrDocJSON(): For document id '"+id+"'"
+										+" Expecting JSONArray or String for value of metadata '"+metaname+"'"
+										+" but encountered type '"+metavalues_var.getClass() + "'");
+					
 				}
 			}
 		}
 
-		for (String metaname: metadata_hashmap_multiple) {
-			JSONObject metakeys = ef_metadata.getJSONObject(metaname);
-
-			if (metakeys != null) {
-				
-				Iterator<String> metakey_iter = metakeys.keys();
-				while (metakey_iter.hasNext()) {
-					String metakey = metakey_iter.next();
-
-					JSONArray metavalues = metakeys.getJSONArray(metakey);
-					if (metavalues != null) {
-						String combined_metaname = metaname + "_" + metakey;
-						if (is_page_level) {
-							solr_doc_json.put("volume"+combined_metaname+"_txt",metavalues);
-							solr_doc_json.put("volume"+combined_metaname+"_htrcstrings",metavalues);
-						}
-						else {
-							solr_doc_json.put(combined_metaname+"_t",metavalues);
-							solr_doc_json.put(combined_metaname+"_ss",metavalues);
-						}
-					}	
-				}
-			}
-		}
-
+		// Special cases
+		// "type",						/* rename of 'bibliographicFormat' and "" to e.g. [DataFeedItem, Book] */
+		
+		
+		/*array*/		//"sourceInstitution",      /* changes from string to [name,type]
+		
+		
 		return solr_doc_json;
 
 	}
+
+
+
+	
 			
 	public ArrayList<String> generateTokenPosCountLangLabels(String volume_id, String page_id, JSONObject ef_page) 
 	{
