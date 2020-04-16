@@ -386,8 +386,13 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		ArrayList<String> lang_list = new ArrayList<String>();
 
 		if (ef_page != null) {
-			String ef_language = ef_page.getString("calculatedLanguage");
-			if (ef_language != null) {
+			//String ef_language = ef_page.getString("calculatedLanguage");
+
+			Object ef_language_var = ef_page.opt("calculatedLanguage");
+			if (ef_language_var != null) {
+				// Consider checking 'var' type first before type-casting if concerned 
+				// that JSON EF not guaranteed to be a String
+				String ef_language = (String)ef_language_var; 
 				lang_list.add(ef_language);
 			}
 			else {
@@ -408,11 +413,17 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 													UniversalPOSLangMap universal_langmap,
 												    JSONObject solr_doc_json)
 	{
+		// TODO: remove
 	    //System.err.println("**** SolrDocJSONEF2p0::addSolrLanguageTextFields() this needs to change!!!");
-			
-		String ef_language = ef_page.getString("calculatedLanguage");
-		if (ef_language != null) {
-			
+		
+		//String ef_language = ef_page.getString("calculatedLanguage");
+		
+		Object ef_language_var = ef_page.opt("calculatedLanguage");
+		if (ef_language_var != null) {
+			// Consider checking 'var' type first before type-casting if concerned 
+			// that JSON EF not guaranteed to be a String
+			String ef_language = (String) ef_language_var; 
+		
 			String [] lang_list = new String[] { ef_language };
 			
 			int text_len = text_al.size();
