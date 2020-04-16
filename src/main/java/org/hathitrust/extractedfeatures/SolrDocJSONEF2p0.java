@@ -309,10 +309,16 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 			
 			Object metavalue_var = ef_metadata.opt(metaname);
 			if (metavalue_var != null) {
-				//String metavalue = ef_metadata.getString(metaname); 
-				String metavalue_str = (String)metavalue_var;
-				
-				setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
+				//String metavalue = ef_metadata.getString(metaname);
+				try {
+					String metavalue_str = (String)metavalue_var;
+
+					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
+				}
+				catch (java.lang.ClassCastException e) {
+					System.err.println("Error when processing id '"+id+"': Failed to cast JSON metadata field '"+metaname+"' to String");
+					e.printStackTrace();
+				}
 			}
 		}
 		
