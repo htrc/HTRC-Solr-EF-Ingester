@@ -299,41 +299,21 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		solr_doc_json.put("id", id);
 
 		for (String metaname: metadata_single_string) {
-			//String metavalue = null;
-			//if (metaname.equals("dateCreated") || metaname.equals("pubDate")) {
-			//	metavalue = Integer.toString(ef_metadata.getInt(metaname));
-			//}
-			//else {
-			//metavalue = ef_metadata.getString(metaname);
-			//}
-			
 			
 			if (!ef_metadata.isNull(metaname)){
 				String metavalue_str = ef_metadata.getString(metaname);
-				//Object metavalue_var = ef_metadata.opt(metaname);
-				//try {
-					//String metavalue_str = (String)metavalue_var;
-
-					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
-				//}
-				//catch (java.lang.ClassCastException e) {
-				//	System.err.println("Error when processing id '"+id+"': Failed to cast JSON metadata field '"+metaname+"' to String");
-				//	e.printStackTrace();
-				//}
+				setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
 			}
 		}
 		
 		for (String metaname: metadata_single_int) {
-			//Object metavalue_var = ef_metadata.opt(metaname);
 			if (!ef_metadata.isNull(metaname)) {
-				//int metavalue_int = (int)metavalue_var;
 				int metavalue_int = ef_metadata.getInt(metaname);
 				setSingleValueIntegerMetadata(is_page_level, solr_doc_json, metaname, metavalue_int);
 			}
 		}
 		
 		for (String metaname: metadata_single_uri) {
-			//Object metavalue_var = ef_metadata.opt(metaname);
 			if (!ef_metadata.isNull(metaname)) {
 				//String metavalue_uri = (String)metavalue_var;
 				String metavalue_uri = ef_metadata.getString(metaname);
@@ -349,18 +329,17 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 			// as the metaname could be an array or string
 			// => Take a more step-wise approach
 			
-			
 			if (!ef_metadata.isNull(metaname)) {
 				Object metavalues_var = ef_metadata.get(metaname); 
-				
+	
 				if (metavalues_var instanceof JSONArray) {
 					JSONArray metavalues = (JSONArray)metavalues_var;
-					//setMultipleValueMetadata(is_page_level, solr_doc_json, metaname, metavalues);
+					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname, metavalues);
 				}
 				else if (metavalues_var instanceof String) {
 					// Single value case in string format
 					String metavalue = (String)metavalues_var;
-					//setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue);
+					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue);
 				}
 				else {
 					// Unrecognized JSON type for field 'metaname'
@@ -389,22 +368,16 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		
 		ArrayList<String> lang_list = new ArrayList<String>();
 
-		if (ef_page != null) {
-			//String ef_language = ef_page.getString("calculatedLanguage");
+		if ((ef_page != null) && (ef_page != JSONObject.NULL)) {
 
-			//Object ef_language_var = ef_page.opt("calculatedLanguage");
 			if (!ef_page.isNull("calculatedLanguage")) {
-				// Consider checking 'var' type first before type-casting if concerned 
-				// that JSON EF not guaranteed to be a String
-				//String ef_language = (String)ef_language_var; 
-				String ef_language = ef_page.getString("calculatedLanguage");
-				
+
+				String ef_language = ef_page.getString("calculatedLanguage");				
 				lang_list.add(ef_language);
 			}
-			else {
-				System.err.println("Warning: empty calculatedLanguage field for '" + page_id + "'");
-			}
-
+			// No need to print out warning if 'calculatedLanguage' is null,
+			// as this is deliberately used to represent the case where no language
+			// could be identified based on the text present on the page
 		}
 		else {
 			System.err.println("Warning: null page for '" + page_id + "'");
@@ -419,19 +392,12 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 													UniversalPOSLangMap universal_langmap,
 												    JSONObject solr_doc_json)
 	{
-		// TODO: remove
-	    //System.err.println("**** SolrDocJSONEF2p0::addSolrLanguageTextFields() this needs to change!!!");
-		
-		//String ef_language = ef_page.getString("calculatedLanguage");
-		
-		//Object ef_language_var = ef_page.opt("calculatedLanguage");
+
 		if (!ef_page.isNull("calculatedLanguage")) {
 			// Consider checking 'var' type first before type-casting if concerned 
 			// that JSON EF not guaranteed to be a String
-			try {
-				//String ef_language = (String) ef_language_var; 
+			//try {
 				String ef_language = ef_page.getString("calculatedLanguage");
-				
 				
 				String [] lang_list = new String[] { ef_language };
 
@@ -497,13 +463,13 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 
 					solr_doc_json.put(lang_text_field, json_values); 
 				}
-			}
-			catch (java.lang.ClassCastException e) {
-				String id = solr_doc_json.getString("id");
-				
-				System.err.println("Error when processing id '"+id+"': Failed to cast JSON metadata field 'calculatedLanguage' to String");
-				e.printStackTrace();
-			}
+			//}
+			//catch (java.lang.ClassCastException e) {
+			//	String id = solr_doc_json.getString("id");
+			//	
+			//	System.err.println("Error when processing id '"+id+"': Failed to cast JSON metadata field 'calculatedLanguage' to String");
+			//	e.printStackTrace();
+			//}
 					
 		}
 	}

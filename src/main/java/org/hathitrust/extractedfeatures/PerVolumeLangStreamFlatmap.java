@@ -86,9 +86,8 @@ class PerVolumeLangStreamFlatmap implements FlatMapFunction<String, String>
 					}
 				}
 
-				JSONObject ef_page = ef_pages.getJSONObject(i);
-
-				if (ef_page != null) {
+				if (!ef_pages.isNull(i)) {
+					JSONObject ef_page = ef_pages.getJSONObject(i);
 					
 					ArrayList<String> page_lang_labels = _solr_doc_json.generateTokenPosCountLangLabels(volume_id, page_id, ef_page);					
 					all_lang_list.addAll(page_lang_labels);

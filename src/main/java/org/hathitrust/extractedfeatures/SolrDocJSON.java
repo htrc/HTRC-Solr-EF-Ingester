@@ -690,10 +690,8 @@ public abstract class SolrDocJSON implements Serializable {
 				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
 				word_list = getTokenPosCountWords(ef_token_pos_count,page_id,icu_tokenize);
 			}
-			else {
-				System.err.println("Warning: empty body field for '" + page_id + "'");
-			}
-
+			// No need to print out warning in 'body' null
+			// Used to signify that the page had no detected text as the body
 		}
 		else {
 			System.err.println("Warning: null page for '" + page_id + "'");
@@ -714,9 +712,8 @@ public abstract class SolrDocJSON implements Serializable {
 				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
 				word_list = getTokenPosCountPOSLabels(ef_token_pos_count,page_id);
 			}
-			else {
-				System.err.println("Warning: empty body field for '" + page_id + "'");
-			}
+			// No need to print out warning in 'body' null
+			// Used to signify that the page had no detected text as the body
 
 		}
 		else {
