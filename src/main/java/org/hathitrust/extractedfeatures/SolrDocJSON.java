@@ -43,12 +43,6 @@ public abstract class SolrDocJSON implements Serializable {
 	{
 	}
 	
-
-
-
-
-	
-	
 	abstract protected JSONObject generateMetadataSolrDocJSON(String id, JSONObject ef_metadata, boolean is_page_level);
 	
 	protected JSONObject generateToplevelMetadataSolrDocJSON(String volume_id, JSONObject ef_metadata)
@@ -442,9 +436,9 @@ public abstract class SolrDocJSON implements Serializable {
 		JSONObject solr_update_json = null;
 		
 		if (ef_page != null) {
-			JSONObject ef_body = ef_page.getJSONObject("body");
+			JSONObject ef_body = ef_page.optJSONObject("body");
 			if (ef_body != null) {
-				JSONObject ef_token_pos_count = ef_body.getJSONObject("tokenPosCount");
+				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
 				if (ef_token_pos_count != null) {
 	
 					JSONObject solr_add_json = new JSONObject();
@@ -686,9 +680,9 @@ public abstract class SolrDocJSON implements Serializable {
 		ArrayList<String> word_list = null;
 		
 		if (ef_page != null) {
-			JSONObject ef_body = ef_page.getJSONObject("body");
+			JSONObject ef_body = ef_page.optJSONObject("body");
 			if (ef_body != null) {
-				JSONObject ef_token_pos_count = ef_body.getJSONObject("tokenPosCount");
+				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
 				word_list = getTokenPosCountWords(ef_token_pos_count,page_id,icu_tokenize);
 			}
 			else {
@@ -708,9 +702,9 @@ public abstract class SolrDocJSON implements Serializable {
 		ArrayList<String> word_list = null;
 
 		if (ef_page != null) {
-			JSONObject ef_body = ef_page.getJSONObject("body");
+			JSONObject ef_body = ef_page.optJSONObject("body");
 			if (ef_body != null) {
-				JSONObject ef_token_pos_count = ef_body.getJSONObject("tokenPosCount");
+				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
 				word_list = getTokenPosCountPOSLabels(ef_token_pos_count,page_id);
 			}
 			else {
@@ -778,7 +772,7 @@ public abstract class SolrDocJSON implements Serializable {
 			in.close();
 
 			JSONObject solr_status_json = new JSONObject(sb.toString());
-			JSONObject response_header_json = solr_status_json.getJSONObject("responseHeader");
+			JSONObject response_header_json = solr_status_json.optJSONObject("responseHeader");
 			if (response_header_json != null) {
 				int status = response_header_json.getInt("status");
 				if (status != 0) {
@@ -803,16 +797,16 @@ public abstract class SolrDocJSON implements Serializable {
 		}
 	}
 
-        public static void postSolrDoc(String post_url, JSONObject solr_add_doc_json,
-				       String info_volume_id, String info_page_id)
+	public static void postSolrDoc(String post_url, JSONObject solr_add_doc_json,
+			String info_volume_id, String info_page_id)
 	{
-	    postSolrDoc(post_url,solr_add_doc_json.toString(),info_volume_id,info_page_id);
+		postSolrDoc(post_url,solr_add_doc_json.toString(),info_volume_id,info_page_id);
 	}
 
-        public static void postSolrDoc(String post_url, JSONArray solr_add_doc_json_array,
-				       String info_volume_id, String info_page_id)
+	public static void postSolrDoc(String post_url, JSONArray solr_add_doc_json_array,
+			String info_volume_id, String info_page_id)
 	{
-	    postSolrDoc(post_url,solr_add_doc_json_array.toString(),info_volume_id,info_page_id);
+		postSolrDoc(post_url,solr_add_doc_json_array.toString(),info_volume_id,info_page_id);
 	}
-    
+
 }

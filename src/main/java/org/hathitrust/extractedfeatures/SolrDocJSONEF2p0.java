@@ -140,8 +140,6 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				   as it is explicitly set in code from 'volume_id' param pass in */
 				// "id",    	            // rename of handleUrl, 
 
-				"language",
-				"lastRightsUpdateDate",     // rename of 'lastUpdateDate'
 				//"lastUpdateDate",			/* now 'lastRightsUpdateDate' */
 				"oclc",						// previously in metadata_multiple var, now a single value in EF2
 				//"rightsAttributes",		/* now 'accessRights */
@@ -153,6 +151,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 
 		metadata_single_int = new String[] {
 				"dateCreated",              // changes from string to int
+				"lastRightsUpdateDate",     // rename of 'lastUpdateDate' and now an int giving date info in the form e.g. 20130810
 				"pubDate"				    // changes from string to int
 		};
 		
@@ -171,7 +170,8 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				//"isbn",
 				//"issn",
 				//"lccn",
-/*URI*/			"genre" 	    			// retained, but now URIs
+/*URI*/			"genre", 	    			// retained, but now URIs
+				"language",					// used to be single value, but now can be multiple
 				//"names" /* now 'contributor' in LOD */
 		};
 		
@@ -377,11 +377,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		
 		return solr_doc_json;
 
-	}
-
-
-
-	
+	}	
 			
 	public ArrayList<String> generateTokenPosCountLangLabels(String volume_id, String page_id, JSONObject ef_page) 
 	{
@@ -421,6 +417,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 			
 			int text_len = text_al.size();
 			
+			// TODO
 			// From here onwards, same as OpenNLP version
 			// => Refactor!!
 			
