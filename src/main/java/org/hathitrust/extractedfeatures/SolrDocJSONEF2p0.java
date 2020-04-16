@@ -307,33 +307,36 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 			//metavalue = ef_metadata.getString(metaname);
 			//}
 			
-			Object metavalue_var = ef_metadata.opt(metaname);
-			if (metavalue_var != null) {
-				//String metavalue = ef_metadata.getString(metaname);
-				try {
-					String metavalue_str = (String)metavalue_var;
+			
+			if (!ef_metadata.isNull(metaname)){
+				String metavalue_str = ef_metadata.getString(metaname);
+				//Object metavalue_var = ef_metadata.opt(metaname);
+				//try {
+					//String metavalue_str = (String)metavalue_var;
 
 					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
-				}
-				catch (java.lang.ClassCastException e) {
-					System.err.println("Error when processing id '"+id+"': Failed to cast JSON metadata field '"+metaname+"' to String");
-					e.printStackTrace();
-				}
+				//}
+				//catch (java.lang.ClassCastException e) {
+				//	System.err.println("Error when processing id '"+id+"': Failed to cast JSON metadata field '"+metaname+"' to String");
+				//	e.printStackTrace();
+				//}
 			}
 		}
 		
 		for (String metaname: metadata_single_int) {
-			Object metavalue_var = ef_metadata.opt(metaname);
-			if (metavalue_var != null) {
-				int metavalue_int = (int)metavalue_var;
+			//Object metavalue_var = ef_metadata.opt(metaname);
+			if (!ef_metadata.isNull(metaname)) {
+				//int metavalue_int = (int)metavalue_var;
+				int metavalue_int = ef_metadata.getInt(metaname);
 				setSingleValueIntegerMetadata(is_page_level, solr_doc_json, metaname, metavalue_int);
 			}
 		}
 		
 		for (String metaname: metadata_single_uri) {
-			Object metavalue_var = ef_metadata.opt(metaname);
-			if (metavalue_var != null) {
-				String metavalue_uri = (String)metavalue_var;
+			//Object metavalue_var = ef_metadata.opt(metaname);
+			if (!ef_metadata.isNull(metaname)) {
+				//String metavalue_uri = (String)metavalue_var;
+				String metavalue_uri = ef_metadata.getString(metaname);
 				setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname, metavalue_uri);
 			}
 		}
@@ -346,8 +349,9 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 			// as the metaname could be an array or string
 			// => Take a more step-wise approach
 			
-			Object metavalues_var = ef_metadata.opt(metaname); // returns null if does not exist
-			if (metavalues_var != null) {
+			
+			if (!ef_metadata.isNull(metaname)) {
+				Object metavalues_var = ef_metadata.get(metaname); 
 				
 				if (metavalues_var instanceof JSONArray) {
 					JSONArray metavalues = (JSONArray)metavalues_var;
@@ -388,11 +392,13 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		if (ef_page != null) {
 			//String ef_language = ef_page.getString("calculatedLanguage");
 
-			Object ef_language_var = ef_page.opt("calculatedLanguage");
-			if (ef_language_var != null) {
+			//Object ef_language_var = ef_page.opt("calculatedLanguage");
+			if (!ef_page.isNull("calculatedLanguage")) {
 				// Consider checking 'var' type first before type-casting if concerned 
 				// that JSON EF not guaranteed to be a String
-				String ef_language = (String)ef_language_var; 
+				//String ef_language = (String)ef_language_var; 
+				String ef_language = ef_page.getString("calculatedLanguage");
+				
 				lang_list.add(ef_language);
 			}
 			else {
@@ -418,13 +424,15 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		
 		//String ef_language = ef_page.getString("calculatedLanguage");
 		
-		Object ef_language_var = ef_page.opt("calculatedLanguage");
-		if (ef_language_var != null) {
+		//Object ef_language_var = ef_page.opt("calculatedLanguage");
+		if (!ef_page.isNull("calculatedLanguage")) {
 			// Consider checking 'var' type first before type-casting if concerned 
 			// that JSON EF not guaranteed to be a String
 			try {
-				String ef_language = (String) ef_language_var; 
-
+				//String ef_language = (String) ef_language_var; 
+				String ef_language = ef_page.getString("calculatedLanguage");
+				
+				
 				String [] lang_list = new String[] { ef_language };
 
 				int text_len = text_al.size();

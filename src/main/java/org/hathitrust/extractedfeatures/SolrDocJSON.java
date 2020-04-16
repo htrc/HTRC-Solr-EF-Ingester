@@ -49,7 +49,7 @@ public abstract class SolrDocJSON implements Serializable {
 	{
 		JSONObject solr_update_json = null;
 		
-		if (ef_metadata != null) {
+		if ((ef_metadata != null) && (ef_metadata != JSONObject.NULL)) {
 			
 			// For JSON Solr format see:
 			//   https://cwiki.apache.org/confluence/display/solr/Uploading+Data+with+Index+Handlers
@@ -80,7 +80,7 @@ public abstract class SolrDocJSON implements Serializable {
 		
 	    ArrayList<String> words = new ArrayList<String>();
 		
-		if (ef_token_pos_count != null) {
+		if ((ef_token_pos_count != null) && (ef_token_pos_count != JSONObject.NULL)) {
 
 			Iterator<String> word_token_iter = ef_token_pos_count.keys();
 			while (word_token_iter.hasNext()) {
@@ -310,7 +310,7 @@ public abstract class SolrDocJSON implements Serializable {
 	{
 		ArrayList<String> pos_labels = new ArrayList<String>();
 
-		if (ef_token_pos_count != null) {
+		if ((ef_token_pos_count != null) && (ef_token_pos_count != JSONObject.NULL)) {
 
 			Iterator<String> word_token_iter = ef_token_pos_count.keys();
 			while (word_token_iter.hasNext()) {
@@ -436,11 +436,14 @@ public abstract class SolrDocJSON implements Serializable {
 		JSONObject solr_update_json = null;
 		
 		if (ef_page != null) {
-			JSONObject ef_body = ef_page.optJSONObject("body");
-			if (ef_body != null) {
-				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
-				if (ef_token_pos_count != null) {
-	
+			
+			if (!ef_page.isNull("body")) {
+				JSONObject ef_body = ef_page.getJSONObject("body");
+				
+				
+				if (!ef_body.isNull("tokenPosCount")) {
+					JSONObject ef_token_pos_count = ef_body.getJSONObject("tokenPosCount");
+					
 					JSONObject solr_add_json = new JSONObject();
 					
 					ArrayList<POSString> text_al = filterSolrTextFields(ef_token_pos_count,page_id,whitelist_bloomfilter,universal_langmap,icu_tokenize);
@@ -680,8 +683,10 @@ public abstract class SolrDocJSON implements Serializable {
 		ArrayList<String> word_list = null;
 		
 		if (ef_page != null) {
-			JSONObject ef_body = ef_page.optJSONObject("body");
-			if (ef_body != null) {
+			
+			if (!ef_page.isNull("body")) {
+				JSONObject ef_body = ef_page.getJSONObject("body");
+				
 				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
 				word_list = getTokenPosCountWords(ef_token_pos_count,page_id,icu_tokenize);
 			}
@@ -702,8 +707,10 @@ public abstract class SolrDocJSON implements Serializable {
 		ArrayList<String> word_list = null;
 
 		if (ef_page != null) {
-			JSONObject ef_body = ef_page.optJSONObject("body");
-			if (ef_body != null) {
+			
+			if (!ef_page.isNull("body")) {
+				JSONObject ef_body = ef_page.getJSONObject("body");
+				
 				JSONObject ef_token_pos_count = ef_body.optJSONObject("tokenPosCount");
 				word_list = getTokenPosCountPOSLabels(ef_token_pos_count,page_id);
 			}
@@ -772,8 +779,10 @@ public abstract class SolrDocJSON implements Serializable {
 			in.close();
 
 			JSONObject solr_status_json = new JSONObject(sb.toString());
-			JSONObject response_header_json = solr_status_json.optJSONObject("responseHeader");
-			if (response_header_json != null) {
+			
+			if (!solr_status_json.isNull("responseHeader")) {
+				JSONObject response_header_json = solr_status_json.getJSONObject("responseHeader");
+				
 				int status = response_header_json.getInt("status");
 				if (status != 0) {
 					System.err.println("Warning: POST request to " + post_url + " returned status " + status);

@@ -139,7 +139,7 @@ public class PerVolumeUtil implements Serializable
 				boolean index_pages = true;
 				if (index_pages) {
 					
-					JSONObject ef_features = extracted_feature_record.optJSONObject("features");
+					JSONObject ef_features = extracted_feature_record.getJSONObject("features");
 
 					int ef_page_count = ef_features.getInt("pageCount");
 
@@ -160,10 +160,9 @@ public class PerVolumeUtil implements Serializable
 							System.out.println("  Page: " + page_id);
 						}
 
-
-						JSONObject ef_page = ef_pages.optJSONObject(i);
-
-						if (ef_page != null) {
+						if (!ef_pages.isNull(i)) {
+							JSONObject ef_page = ef_pages.getJSONObject(i);
+							
 							// Convert to Solr add form
 							JSONObject solr_add_doc_json 
 							= _solr_doc_json.generateSolrDocJSON(volume_id, page_id, 
@@ -284,9 +283,11 @@ public class PerVolumeUtil implements Serializable
 		}
 		
 		String volume_id = vol_rec.getString("volId");
-		JSONArray capisco_pages = vol_rec.optJSONArray("pages");
 		
-		if (capisco_pages != null) {
+		
+		if (!vol_rec.isNull("pages")) {
+			
+			JSONArray capisco_pages = vol_rec.getJSONArray("pages");
 			
 			// Need to get to Solr-7.3 to have "add-distinct" so the following returns an array
 			// built out of "remove" followed by "add" for now
@@ -393,7 +394,7 @@ public class PerVolumeUtil implements Serializable
 						System.out.println("Sample output JSON page file [i=0]: " + output_json_bz2);
 					}
 				}
-				JSONObject ef_page = ef_pages.optJSONObject(i);
+				JSONObject ef_page = ef_pages.getJSONObject(i);
 
 				if (ef_page != null) {
 					// Convert to Solr add form
