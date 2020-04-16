@@ -173,12 +173,17 @@ public class PerVolumeUtil implements Serializable
 
 							if ((_verbosity >=2) && (i==20)) {
 								System.out.println("==================");
-								System.out.println("Sample output Solr add JSON [page 20]: " + solr_add_doc_json.toString());
-								System.out.println("==================");
+								if (solr_add_doc_json != null) {
+									System.out.println("Sample output Solr add JSON [page 20]: " + solr_add_doc_json.toString());
+								}
+								else {
+									System.out.println("Sample output Solr add JSON [page 20]: is null" );
+								}
+								System.out.println("==================");			
 							}
 
 
-							if (solr_url != null) {
+							if ((solr_url != null) && (solr_add_doc_json != null)) {
 								SolrDocJSON.postSolrDoc(solr_url, solr_add_doc_json, volume_id, page_id);
 							}
 						}

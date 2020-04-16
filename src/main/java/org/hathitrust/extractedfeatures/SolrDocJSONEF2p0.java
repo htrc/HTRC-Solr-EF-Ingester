@@ -141,7 +141,6 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				// "id",    	            // rename of handleUrl, 
 
 				//"lastUpdateDate",			/* now 'lastRightsUpdateDate' */
-				"oclc",						// previously in metadata_multiple var, now a single value in EF2
 				//"rightsAttributes",		/* now 'accessRights */
 				//"sourceInstitutionRecordNumber", /* removed in EF2 */
 				"title"
@@ -171,7 +170,8 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				//"issn",
 				//"lccn",
 /*URI*/			"genre", 	    			// retained, but now URIs
-				"language",					// used to be single value, but now can be multiple
+				"language",					// used to be single value in EF1.5, but now in EF2 can be multiple
+				"oclc",						// unchanged
 				//"names" /* now 'contributor' in LOD */
 		};
 		
@@ -422,71 +422,79 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		if (ef_language_var != null) {
 			// Consider checking 'var' type first before type-casting if concerned 
 			// that JSON EF not guaranteed to be a String
-			String ef_language = (String) ef_language_var; 
-		
-			String [] lang_list = new String[] { ef_language };
-			
-			int text_len = text_al.size();
-			
-			// TODO
-			// From here onwards, same as OpenNLP version
-			// => Refactor!!
-			
-			// Used to separate POS languages from non-POS ones (in code below) 
-			// and also index on all EF languages present
-			//
-			// The code now processes POS and non-POS together, and only picks
-			// the language with the highest confidence rating
-			//
-			// Through the subroutines called, the disastrous (!) decision to
-			// apply the English POS model to any language that didn't have its 
-			// own POS model is undone.  Only languages with a valid model got
-			// Lang+POS fields in the Solr index; the other one a single Lang fields
-			// 
-			
-			// Deal with POS languages and non-POS at the same time
+			try {
+				String ef_language = (String) ef_language_var; 
 
-			HashMap<String,JSONArray> pos_lang_text_field_map = new HashMap<String,JSONArray>();
+				String [] lang_list = new String[] { ef_language };
 
-			for (int ti=0; ti<text_len; ti++) {
-				POSString pos_text_value = text_al.get(ti);
-				String text_value = pos_text_value.getString();
+				int text_len = text_al.size();
 
-				String[] pos_tags = pos_text_value.getPOSTags();
-				int pos_tags_len = pos_tags.length;
+				// TODO
+				// From here onwards, same as OpenNLP version
+				// => Refactor!!
 
-				for (int pti=0; pti<pos_tags_len; pti++) {
-					String stanfordnlp_pos_key = pos_tags[pti];
+				// Used to separate POS languages from non-POS ones (in code below) 
+				// and also index on all EF languages present
+				//
+				// The code now processes POS and non-POS together, and only picks
+				// the language with the highest confidence rating
+				//
+				// Through the subroutines called, the disastrous (!) decision to
+				// apply the English POS model to any language that didn't have its 
+				// own POS model is undone.  Only languages with a valid model got
+				// Lang+POS fields in the Solr index; the other one a single Lang fields
+				// 
 
-					Tuple2<String,String> lang_pos_pair = universal_langmap.getUniversalLanguagePOSPair(lang_list, stanfordnlp_pos_key);
-					String selected_lang = lang_pos_pair._1;
-					String upos = lang_pos_pair._2;
+				// Deal with POS languages and non-POS at the same time
 
-					if (upos != null) {
-						// POS-tagged language
-						String pos_lang_text_field = selected_lang + "_" + upos + "_htrctokentext";
-						addToSolrLanguageTextFieldMap(pos_lang_text_field_map,pos_lang_text_field,text_value);
+				HashMap<String,JSONArray> pos_lang_text_field_map = new HashMap<String,JSONArray>();
+
+				for (int ti=0; ti<text_len; ti++) {
+					POSString pos_text_value = text_al.get(ti);
+					String text_value = pos_text_value.getString();
+
+					String[] pos_tags = pos_text_value.getPOSTags();
+					int pos_tags_len = pos_tags.length;
+
+					for (int pti=0; pti<pos_tags_len; pti++) {
+						String stanfordnlp_pos_key = pos_tags[pti];
+
+						Tuple2<String,String> lang_pos_pair = universal_langmap.getUniversalLanguagePOSPair(lang_list, stanfordnlp_pos_key);
+						String selected_lang = lang_pos_pair._1;
+						String upos = lang_pos_pair._2;
+
+						if (upos != null) {
+							// POS-tagged language
+							String pos_lang_text_field = selected_lang + "_" + upos + "_htrctokentext";
+							addToSolrLanguageTextFieldMap(pos_lang_text_field_map,pos_lang_text_field,text_value);
+						}
+
+						// Even for a POS language we want a non-POS version so we can perform faster searching
+						// when all parts-of-speech are selected by avoiding the need to Boolean AND all the POS terms
+						String non_pos_lang_text_field = selected_lang+  "_htrctokentext";
+						addToSolrLanguageTextFieldMap(pos_lang_text_field_map,non_pos_lang_text_field,text_value);
+
+						// On top of this, also store text under "alllangs_htrctokentext" field to allow faster 
+						// searching when all POS + all languages is selected
+						String alllangs_text_field = "alllangs_htrctokentext";
+						addToSolrLanguageTextFieldMap(pos_lang_text_field_map,alllangs_text_field,text_value);
 					}
+				}
 
-					// Even for a POS language we want a non-POS version so we can perform faster searching
-					// when all parts-of-speech are selected by avoiding the need to Boolean AND all the POS terms
-					String non_pos_lang_text_field = selected_lang+  "_htrctokentext";
-					addToSolrLanguageTextFieldMap(pos_lang_text_field_map,non_pos_lang_text_field,text_value);
+				// Now add each of the POS language fields into solr_doc_json
+				Set<String> pos_lang_field_keys = pos_lang_text_field_map.keySet();
+				for (String plf_key : pos_lang_field_keys) {
+					String lang_text_field = plf_key;
+					JSONArray json_values = pos_lang_text_field_map.get(plf_key);
 
-					// On top of this, also store text under "alllangs_htrctokentext" field to allow faster 
-					// searching when all POS + all languages is selected
-					String alllangs_text_field = "alllangs_htrctokentext";
-					addToSolrLanguageTextFieldMap(pos_lang_text_field_map,alllangs_text_field,text_value);
+					solr_doc_json.put(lang_text_field, json_values); 
 				}
 			}
-
-			// Now add each of the POS language fields into solr_doc_json
-			Set<String> pos_lang_field_keys = pos_lang_text_field_map.keySet();
-			for (String plf_key : pos_lang_field_keys) {
-				String lang_text_field = plf_key;
-				JSONArray json_values = pos_lang_text_field_map.get(plf_key);
-
-				solr_doc_json.put(lang_text_field, json_values); 
+			catch (java.lang.ClassCastException e) {
+				String id = solr_doc_json.getString("id");
+				
+				System.err.println("Error when processing id '"+id+"': Failed to cast JSON metadata field 'calculatedLanguage' to String");
+				e.printStackTrace();
 			}
 					
 		}

@@ -143,11 +143,14 @@ class PerPageJSONFlatmap implements FlatMapFunction<String, JSONObject>
 						= _solr_doc_json.generateSolrDocJSON(volume_id, page_id, ef_metadata, ef_page, 
 													_whitelist_bloomfilter, _universal_langmap,
 													_icu_tokenize);
+					if (solr_add_doc_json == null) {
+						// A sign that no body was found in ef_page, but want to store filename_json_bas anyway
+						solr_add_doc_json = new JSONObject();
+					}
+					
 					solr_add_doc_json.put("filename_json_bz2", output_json_bz2);
 
 					json_pages.add(solr_add_doc_json);
-
-
 				}
 				else {
 					System.err.println("Skipping: " + page_id);
