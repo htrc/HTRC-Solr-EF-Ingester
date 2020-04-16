@@ -107,7 +107,7 @@ public class PerVolumeUtil implements Serializable
 			if (extracted_feature_record != null) {
 				String volume_id = extracted_feature_record.getString("id");
 
-				JSONObject ef_metadata = extracted_feature_record.getJSONObject("metadata");
+				JSONObject ef_metadata = extracted_feature_record.optJSONObject("metadata");
 				//String title= ef_metadata.getString("title");
 
 				//
@@ -139,7 +139,7 @@ public class PerVolumeUtil implements Serializable
 				boolean index_pages = true;
 				if (index_pages) {
 					
-					JSONObject ef_features = extracted_feature_record.getJSONObject("features");
+					JSONObject ef_features = extracted_feature_record.optJSONObject("features");
 
 					int ef_page_count = ef_features.getInt("pageCount");
 
@@ -161,7 +161,7 @@ public class PerVolumeUtil implements Serializable
 						}
 
 
-						JSONObject ef_page = ef_pages.getJSONObject(i);
+						JSONObject ef_page = ef_pages.optJSONObject(i);
 
 						if (ef_page != null) {
 							// Convert to Solr add form
@@ -179,8 +179,7 @@ public class PerVolumeUtil implements Serializable
 
 
 							if (solr_url != null) {
-								SolrDocJSON.postSolrDoc(solr_url, solr_add_doc_json,
-										volume_id, page_id);
+								SolrDocJSON.postSolrDoc(solr_url, solr_add_doc_json, volume_id, page_id);
 							}
 						}
 						else {
@@ -280,7 +279,7 @@ public class PerVolumeUtil implements Serializable
 		}
 		
 		String volume_id = vol_rec.getString("volId");
-		JSONArray capisco_pages = vol_rec.getJSONArray("pages");
+		JSONArray capisco_pages = vol_rec.optJSONArray("pages");
 		
 		if (capisco_pages != null) {
 			
@@ -389,7 +388,7 @@ public class PerVolumeUtil implements Serializable
 						System.out.println("Sample output JSON page file [i=0]: " + output_json_bz2);
 					}
 				}
-				JSONObject ef_page = ef_pages.getJSONObject(i);
+				JSONObject ef_page = ef_pages.optJSONObject(i);
 
 				if (ef_page != null) {
 					// Convert to Solr add form
