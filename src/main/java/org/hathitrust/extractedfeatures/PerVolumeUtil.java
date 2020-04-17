@@ -105,8 +105,14 @@ public class PerVolumeUtil implements Serializable
 			JSONObject extracted_feature_record  = new JSONObject(json_text.toString());
 
 			if (extracted_feature_record != null) {
+				// EF1.0 and EF1.5 ids where of the form:
+				//   hvd.32044090308966
+				// EF2.0 now full URI of the form:
+				//   https://data.analytics.hathitrust.org/extracted-features/20200210/hvd.32044090308966
+				
 				String volume_id = extracted_feature_record.getString("id");
-
+				volume_id = volume_id.replaceFirst("https://data.analytics.hathitrust.org/extracted-features/\\d+/", "");
+				
 				JSONObject ef_metadata = extracted_feature_record.optJSONObject("metadata");
 				//String title= ef_metadata.getString("title");
 

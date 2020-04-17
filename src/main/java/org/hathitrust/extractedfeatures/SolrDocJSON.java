@@ -472,10 +472,8 @@ public abstract class SolrDocJSON implements Serializable {
 					System.err.println("Warning: empty tokenPosCount field for '" + page_id + "'");
 				}
 			}
-			else {
-				System.err.println("Warning: empty body field for '" + page_id + "'");
-			}
-			
+			// No need to print out warning in 'body' null
+			// Used to signify that the page had no detected text as the body			
 		}
 		else {
 			System.err.println("Warning: null page for '" + page_id + "'");
