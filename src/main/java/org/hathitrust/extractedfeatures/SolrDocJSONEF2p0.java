@@ -412,8 +412,14 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		}
 		else {
 			for (int i=0; i<3; i++) {
+				try {
 				String meop_metavalue = type_metavalue_array.getString(i);
 				setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
+				}
+				catch (org.json.JSONException e) {
+					System.err.println("**** Error: For id = '"+id+"' accessing mainEntityOfPage["+i+" threw exception");
+					e.printStackTrace();
+				}
 			}
 		}	
 		
