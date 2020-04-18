@@ -122,6 +122,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 	
 	protected String[] metadata_single_int = null;
 	protected String[] metadata_single_uri = null;
+	protected String[] metadata_multiple_uri = null;
 	protected String[] metadata_multiple_id_name_type = null;
 	
 	public SolrDocJSONEF2p0()
@@ -155,13 +156,16 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		
 
 		metadata_multiple = new String[] {
-				//"isbn", /* now gone */
-				//"issn", /* now gone */
-				//"lccn", /* now gone */
-/*URI*/			"genre", 	    			// retained, but now URIs
-				"language",					// used to be single value in EF1.5, but now in EF2 can be multiple
-				"oclc"						// unchanged
+				//"isbn", 					/* now gone */
+				//"issn", 					/* now gone */
+				//"lccn", 					/* now gone */
+				"language",					/* used to be single value in EF1.5, but now in EF2 can be multiple */
+				"oclc"						/* unchanged */
 				//"names" 					/* now 'contributor' in LOD, appears to now only be a single entry */
+		};
+		
+		metadata_multiple_uri = new String[] {
+				"genre" 	    			/* retained, but now URIs */
 		};
 		
 		metadata_multiple_id_name_type = new String[] {
@@ -174,11 +178,15 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 	{	
 		if (is_page_level) {
 			// In EF1.5 this used to be _htrcstring, but now prefer _htrcstrings to simplify Solr Query syntax for field searching
-			solr_doc_json.put("volume"+metaname+"_htrcstrings",metavalue); 		
+			//solr_doc_json.put("volume"+metaname+"_htrcstrings",metavalue); 
+			
+			solr_doc_json.put("volume"+metaname+"_htrcstring",metavalue); 		
 		}
 		else {
 			// In EF1.5 this used to be _s, but now prefer _ss to simplify Solr Query syntax for field searching
-			solr_doc_json.put(metaname+"_ss",metavalue);
+			//solr_doc_json.put(metaname+"_ss",metavalue);
+			
+			solr_doc_json.put(metaname+"_s",metavalue);
 		}
 	}
 	
@@ -211,22 +219,38 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 	
 	protected void setSingleValueURIMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, String metavalue_uri) 
 	{
-		// Don't want the URI tokenized in any way, so the _ss or _htrcstrings fields used for faceting
-		// are also what we want for regular searching
+		// Don't want the URI tokenized in any way, so use _s or _htrcstring fields
+		// This can be accomplished by using the ForFaceting method
 		setSingleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalue_uri);	
 	}
 	
 	
-	protected void setMultipleValueMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, JSONArray metavalues) {
+	protected void setMultipleValueMetadataForFaceting(boolean is_page_level, JSONObject solr_doc_json, String metaname, JSONArray metavalues) 
+	{
 		// Short-cut => can dump the retrieved JSONArray directly into the SolrDoc JSONObject 
 		if (is_page_level) {
-			solr_doc_json.put("volume"+metaname+"_txt",metavalues); // not stored
 			solr_doc_json.put("volume"+metaname+"_htrcstrings",metavalues);
 		}
 		else {
-			solr_doc_json.put(metaname+"_t",metavalues); // stored
 			solr_doc_json.put(metaname+"_ss",metavalues);
 		}
+	}
+	
+	protected void setMultipleValueStringMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, JSONArray metavalues) 
+	{
+		// Short-cut => can dump the retrieved JSONArray directly into the SolrDoc JSONObject 
+		if (is_page_level) {
+			solr_doc_json.put("volume"+metaname+"_txt",metavalues); // not stored
+		}
+		else {
+			solr_doc_json.put(metaname+"_t",metavalues); // stored
+		}
+		setMultipleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalues);
+	}
+	
+	protected void setMultipleValueURIMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, JSONArray metavalues) 
+	{
+		setMultipleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalues);
 	}
 	
 	
@@ -314,7 +338,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 			}
 		}
 		
-
+		
 		for (String metaname: metadata_multiple) {
 			
 			// Can't do the following:
@@ -327,7 +351,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 	
 				if (metavalues_var instanceof JSONArray) {
 					JSONArray metavalues = (JSONArray)metavalues_var;
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname, metavalues);
+					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalues);
 				}
 				else if (metavalues_var instanceof String) {
 					// Single value case in string format
@@ -337,18 +361,45 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					JSONArray metavalues = new JSONArray();
 					metavalues.put(metavalue);
 					
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname, metavalues);
+					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalues);
 				}
 				else {
 					// Unrecognized JSON type for field 'metaname'
 					System.err.println("SolrDocJSON2p1::generateMetadataSolrDocJSON(): For document id '"+id+"'"
 										+" Expecting JSONArray or String for value of metadata '"+metaname+"'"
-										+" but encountered type '"+metavalues_var.getClass() + "'");
-					
+										+" but encountered type '"+metavalues_var.getClass() + "'");	
 				}
 			}
 		}
 
+		for (String metaname: metadata_multiple_uri) {
+			
+			if (!ef_metadata.isNull(metaname)) {
+				Object metavalues_var = ef_metadata.get(metaname); 
+	
+				if (metavalues_var instanceof JSONArray) {
+					JSONArray metavalues = (JSONArray)metavalues_var;
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname, metavalues);
+				}
+				else if (metavalues_var instanceof String) {
+					// Single value case in string format
+					String metavalue = (String)metavalues_var;
+					
+					// Wrap it up as an array, so treated consistently with other multiple value entries
+					JSONArray metavalues = new JSONArray();
+					metavalues.put(metavalue);
+					
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname, metavalues);
+				}
+				else {
+					// Unrecognized JSON type for field 'metaname'
+					System.err.println("SolrDocJSON2p1::generateMetadataSolrDocJSON(): For document id '"+id+"'"
+										+" Expecting JSONArray or String for value of metadata '"+metaname+"'"
+										+" but encountered type '"+metavalues_var.getClass() + "'");	
+				}
+			}
+		}
+		
 		for (String metaname: metadata_multiple_id_name_type) {
 			if (!ef_metadata.isNull(metaname)) {
 				Object metavalues_var = ef_metadata.get(metaname); 
@@ -372,9 +423,9 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 						metavalues_type.put(metavalue_type);
 					}
 					
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
+					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
 				}
 				else {
 					// If not an array or {}, then a single {}
@@ -391,27 +442,10 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					metavalues_name.put(metavalue_name);
 					metavalues_type.put(metavalue_type);
 					
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
-					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
+					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
 				}
-				
-				/*
-				try {
-					JSONObject metavalue_id_name_type = ef_metadata.getJSONObject(metaname);
-					String metavalue_id = metavalue_id_name_type.getString("id");
-					String metavalue_name = metavalue_id_name_type.getString("name");
-					String metavalue_type = metavalue_id_name_type.getString("type");
-
-					setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname+"id", metavalue_id);
-					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname+"name", metavalue_name);
-					setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname+"type", metavalue_type);
-				}
-				catch (org.json.JSONException e) {
-					System.err.println("**** Error: For id = '"+id+"' trying to access '"+metaname+" as JSONObject");
-					e.printStackTrace();
-				}
-				*/
 			}
 		}
 		
