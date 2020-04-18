@@ -351,14 +351,20 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 
 		for (String metaname: metadata_single_id_name_type) {
 			if (!ef_metadata.isNull(metaname)) {
-				JSONObject metavalue_id_name_type = ef_metadata.getJSONObject(metaname);
-				String metavalue_id = metavalue_id_name_type.getString("id");
-				String metavalue_name = metavalue_id_name_type.getString("name");
-				String metavalue_type = metavalue_id_name_type.getString("type");
-				
-				setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname+"id", metavalue_id);
-				setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname+"name", metavalue_name);
-				setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname+"type", metavalue_type);
+				try {
+					JSONObject metavalue_id_name_type = ef_metadata.getJSONObject(metaname);
+					String metavalue_id = metavalue_id_name_type.getString("id");
+					String metavalue_name = metavalue_id_name_type.getString("name");
+					String metavalue_type = metavalue_id_name_type.getString("type");
+
+					setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname+"id", metavalue_id);
+					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname+"name", metavalue_name);
+					setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname+"type", metavalue_type);
+				}
+				catch (org.json.JSONException e) {
+					System.err.println("**** Error: For id = '"+id+"' trying to access '"+metaname+" as JSONObject");
+					e.printStackTrace();
+				}
 			}
 		}
 		
@@ -417,7 +423,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
 				}
 				catch (org.json.JSONException e) {
-					System.err.println("**** Error: For id = '"+id+"' accessing mainEntityOfPage["+i+" threw exception");
+					System.err.println("**** Error: For id = '"+id+"' accessing mainEntityOfPage["+i+"] threw exception");
 					e.printStackTrace();
 				}
 			}
