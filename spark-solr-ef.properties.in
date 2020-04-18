@@ -2,12 +2,16 @@
 wcsa-ef-ingest.process-ef-json-mode = per-volume
 #wcsa-ef-ingest.process-ef-json-mode = per-page
 wcsa-ef-ingest.use-whitelist = true
+
+#wcsa-ef-ingest.whitelist-filename = file:@htrc-solr-ef-ingester-home@/whitelist-peter-ef1p0.txt
 wcsa-ef-ingest.whitelist-filename = file:/home/dbbridge/extracted-features-solr/solr-ingest/whitelist-peter1.txt
 #wcsa-ef-ingest.whitelist-filename = file:/hdfsd05/dbbridge/whitelist-peter1.txt
 #wcsa-ef-ingest.whitelist-filename = file:///home/dbbridge/extracted-features-solr/solr-ingest/whitelist-peter1.txt
 
 wcsa-ef-ingest.use-langmap = true
-wcsa-ef-ingest.langmap-directory = file:/home/dbbridge/extracted-features-solr/solr-ingest/opennlp-lang-pos-mappings/
+#wcsa-ef-ingest.langmap-directory = file:@htrc-solr-ef-ingester-home@/opennlp-lang-pos-mappings/
+wcsa-ef-ingest.langmap-directory = file:@htrc-solr-ef-ingester-home@/stanfordnlp-lang-pos-mappings/
+#wcsa-ef-ingest.langmap-directory = file:/home/dbbridge/extracted-features-solr/solr-ingest/opennlp-lang-pos-mappings/
 #wcsa-ef-ingest.langmap-directory = hdfs://user/dbbridge/opennlp-lang-pos-mappings/
 
 #wcsa-ef-ingest.solr-clode-nodes = 10.11.0.53:8983,10.11.0.54:8983,10.11.0.55:8983
