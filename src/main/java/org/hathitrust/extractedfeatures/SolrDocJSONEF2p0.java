@@ -122,7 +122,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 	
 	protected String[] metadata_single_int = null;
 	protected String[] metadata_single_uri = null;
-	protected String[] metadata_single_id_name_type = null;
+	protected String[] metadata_multiple_id_name_type = null;
 	
 	public SolrDocJSONEF2p0()
 	{
@@ -153,11 +153,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				"typeOfResource"			/* retained but string ("text") now full URI (http://id.loc.gov/ontologies/bibframe/Text) */
 		};
 		
-		metadata_single_id_name_type = new String[] {
-				"publisher",				/* previously 'imprint', but now LOD triple*/
-				"pubPlace"					/* retains name, but now LOD triple */
-		};
-		
+
 		metadata_multiple = new String[] {
 				//"isbn", /* now gone */
 				//"issn", /* now gone */
@@ -168,6 +164,10 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				//"names" 					/* now 'contributor' in LOD, appears to now only be a single entry */
 		};
 		
+		metadata_multiple_id_name_type = new String[] {
+				"publisher",				/* previously 'imprint', but now LOD triple*/
+				"pubPlace"					/* retains name, but now LOD triple */
+		};
 	}
 	
 	protected void setSingleValueMetadataForFaceting(boolean is_page_level, JSONObject solr_doc_json, String metaname, String metavalue) 
@@ -349,8 +349,54 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 			}
 		}
 
-		for (String metaname: metadata_single_id_name_type) {
+		for (String metaname: metadata_multiple_id_name_type) {
 			if (!ef_metadata.isNull(metaname)) {
+				Object metavalues_var = ef_metadata.get(metaname); 
+				
+				if (metavalues_var instanceof JSONArray) {
+					JSONArray metavalues_id_name_type = (JSONArray)metavalues_var;
+					JSONArray metavalues_id   = new JSONArray();
+					JSONArray metavalues_name = new JSONArray();
+					JSONArray metavalues_type = new JSONArray();
+					
+					int metavalues_len = metavalues_id_name_type.length();
+					for (int i=0; i<metavalues_len; i++) {
+						
+						JSONObject metavalue_id_name_type = metavalues_id_name_type.getJSONObject(i);
+						String metavalue_id   = metavalue_id_name_type.getString("id");
+						String metavalue_name = metavalue_id_name_type.getString("name");
+						String metavalue_type = metavalue_id_name_type.getString("type");
+
+						metavalues_id.put(metavalue_id);
+						metavalues_name.put(metavalue_name);
+						metavalues_type.put(metavalue_type);
+					}
+					
+					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
+					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
+					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
+				}
+				else {
+					// If not an array or {}, then a single {}
+					JSONObject metavalue_id_name_type = ef_metadata.getJSONObject(metaname);
+					String metavalue_id = metavalue_id_name_type.getString("id");
+					String metavalue_name = metavalue_id_name_type.getString("name");
+					String metavalue_type = metavalue_id_name_type.getString("type");
+					
+					JSONArray metavalues_id   = new JSONArray();
+					JSONArray metavalues_name = new JSONArray();
+					JSONArray metavalues_type = new JSONArray();
+					
+					metavalues_id.put(metavalue_id);
+					metavalues_name.put(metavalue_name);
+					metavalues_type.put(metavalue_type);
+					
+					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
+					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
+					setMultipleValueMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
+				}
+				
+				/*
 				try {
 					JSONObject metavalue_id_name_type = ef_metadata.getJSONObject(metaname);
 					String metavalue_id = metavalue_id_name_type.getString("id");
@@ -365,6 +411,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					System.err.println("**** Error: For id = '"+id+"' trying to access '"+metaname+" as JSONObject");
 					e.printStackTrace();
 				}
+				*/
 			}
 		}
 		
