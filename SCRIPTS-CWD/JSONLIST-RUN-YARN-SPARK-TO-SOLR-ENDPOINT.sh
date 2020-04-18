@@ -8,7 +8,7 @@ json_filelist=${1:-json-filelist.txt}
 shift
 
 if [ $# = 1 ] ; then
-  input_dir="hdfs:///user/dbbridge/json-files"
+  input_dir="hdfs:///user/dbbridge/json-files-stubby"
 else 
   input_dir=$1
   shift
