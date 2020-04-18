@@ -113,6 +113,7 @@ class PerPageJSONFlatmap implements FlatMapFunction<String, JSONObject>
 			}
 
 			for (int i = 0; i < ef_page_count; i++) {
+				// TODO: change to expressing this as seq-... also check %06 consistent with HathiTrust
 				String formatted_i = String.format("page-%06d", i);
 				String page_id = volume_id + "." + formatted_i;
 
