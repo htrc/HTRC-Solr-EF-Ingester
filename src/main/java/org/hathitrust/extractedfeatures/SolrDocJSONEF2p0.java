@@ -404,7 +404,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		// 		            "http://catalog.hathitrust.org/api/volumes/full/oclc/37262723.json"
 		// 		        ]
 		
-		JSONArray meop_metavalue_array= ef_metadata.getJSONArray("mainEntityOfPage");
+		JSONArray meop_metavalue_array = ef_metadata.getJSONArray("mainEntityOfPage");
 		
 		if (meop_metavalue_array.length() != 3) {
 			System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' contained "
@@ -413,7 +413,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		else {
 			for (int i=0; i<3; i++) {
 				try {
-				String meop_metavalue = type_metavalue_array.getString(i);
+				String meop_metavalue = meop_metavalue_array.getString(i);
 				setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
 				}
 				catch (org.json.JSONException e) {
