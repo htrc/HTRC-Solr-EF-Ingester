@@ -76,7 +76,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		-governmentDocument: false -> gone
 	    ~handleUrl -> now 'id' in new format
 		~hathitrustRecordNumber": "8668964" -> now appears in 'mainEntityOfPage', URI-field [0] and leading 00 padding
-	    ~htBibUrl: "http://catalog.hathitrust.org/api/volumes/full/htid/coo.31924013523232.json" -> now in 'mainEntityOfPage' [2]
+	    ~htBibUrl: "http://catalog.hathitrust.org/api/volumes/full/htid/coo.31924013523232.json" -> now in 'mainEntityOfPage' [3]
 		~id: "http://hdl.handle.net/2027/coo.31924013523232" renamed from previous handleUrl
 	    ~imprint: "B. Tauchnitz, 1873." -> now 'publisher' as RDF triple (id, name, type)
 	  !!?isbn: [] -> gone or because empty???
@@ -499,16 +499,18 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					+ meop_metavalue_array.length() +" items, when 3 were expected");
 		}
 		else {
+			setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue_array);
+			/*
 			for (int i=0; i<3; i++) {
 				try {
 				String meop_metavalue = meop_metavalue_array.getString(i);
-				setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
+				setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
 				}
 				catch (org.json.JSONException e) {
 					System.err.println("**** Error: For id = '"+id+"' accessing mainEntityOfPage["+i+"] threw exception");
 					e.printStackTrace();
 				}
-			}
+			}*/
 		}	
 		
 		return solr_doc_json;
