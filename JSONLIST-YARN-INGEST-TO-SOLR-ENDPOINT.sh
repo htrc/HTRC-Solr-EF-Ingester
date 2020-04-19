@@ -59,12 +59,16 @@ fi
 
 
 nohup_cmd="./SCRIPTS-CWD/JSONLIST-RUN-YARN-SPARK-TO-SOLR-ENDPOINT.sh $solr_base_url $hdfs_json_list $solr_col"
+#nohup_cmd="./SCRIPTS-CWD/JSONLIST-RUN-YARN-SPARK-TO-SOLR-ENDPOINT.sh $solr_base_url $hdfs_json_list $solr_col hdfs:///user/dbbridge/json-files-stubby"
+
 echo ""
 echo "Launching nohup cmd:"
 echo "  $nohup_cmd"
 
 if [ -f "nohup.out" ] ; then
-    echo "Do you want to remove nohup.out before it starts [y/N or a=abort]?"
+    echo "****"
+    echo "* Do you want to remove nohup.out before it starts [y/N or a=abort]?"
+    echo "****"
     read rm_nohup_ans
     if [ "x$rm_nohup_ans" != "x" ] ; then
 	if [ "$rm_nohup_ans" = "a" ] ; then
