@@ -161,7 +161,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				//"lccn", 					/* now gone */
 				"language",					/* used to be single value in EF1.5, but now in EF2 can be multiple */
 				"oclc"						/* unchanged */
-				//"names" 					/* now 'contributor' in LOD, appears to now only be a single entry */
+				//"names" 					/* now 'contributor' in LOD form */
 		};
 		
 		metadata_multiple_uri = new String[] {
@@ -169,6 +169,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		};
 		
 		metadata_multiple_id_name_type = new String[] {
+				"contributor",				/* rename of 'names' and now in LOD form */
 				"publisher",				/* previously 'imprint', but now LOD triple*/
 				"pubPlace"					/* retains name, but now LOD triple */
 		};
@@ -423,9 +424,9 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 						metavalues_type.put(metavalue_type);
 					}
 					
-					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
-					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
-					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Id",   metavalues_id);
+					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Type", metavalues_type);
 				}
 				else {
 					// If not an array or {}, then a single {}
@@ -442,9 +443,9 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					metavalues_name.put(metavalue_name);
 					metavalues_type.put(metavalue_type);
 					
-					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"id",   metavalues_id);
-					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"name", metavalues_name);
-					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"type", metavalues_type);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Id",   metavalues_id);
+					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
+					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Type", metavalues_type);
 				}
 			}
 		}
@@ -479,7 +480,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					+"'"+sourceinst_metavalue_type +"' rather than 'http://id.loc.gov/ontologies/bibframe/Organization'");
 		}
 		else {
-			setSingleValueStringMetadata(is_page_level, solr_doc_json, "sourceInstitute", sourceinst_metavalue_name);
+			setSingleValueStringMetadata(is_page_level, solr_doc_json, "sourceInstitution", sourceinst_metavalue_name);
 		}
 		
 		
