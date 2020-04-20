@@ -251,7 +251,18 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 	
 	protected void setMultipleValueURIMetadata(boolean is_page_level, JSONObject solr_doc_json, String metaname, JSONArray metavalues) 
 	{
-		setMultipleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalues);
+		JSONArray filtered_metavalues = new JSONArray();
+		for (int i=0; i<metavalues.length(); i++) {
+			String uri = metavalues.getString(i);
+			if (uri.startsWith("urn:uuid")) {
+				continue;
+			}
+			filtered_metavalues.put(uri);
+		}
+		
+		if (filtered_metavalues.length() > 0 ) {
+			setMultipleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, filtered_metavalues);
+		}
 	}
 	
 	
