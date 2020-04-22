@@ -346,16 +346,20 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					if (!is_page_level) {
 						// To avoid unnecessary spamming of the error, 
 						// only print it out for the top-level volume metadata case
-
-						System.err.println("**** Error: For id = '"+id+"' accessing '"+metaname+"' as an int");
-						e.printStackTrace();
+						System.out.println("Warning: For id = '"+id+"' accessing '"+metaname+"' as an int");
 					}
 					
 					String metavalue_str = ef_metadata.getString(metaname);
-					if (!is_page_level) {
-						System.err.println("**** Saving the value '"+metavalue_str+"' as an indexed string");
+					
+					if (!metavalue_str.isEmpty()) {
+						if (!is_page_level) {
+							System.out.println("         Saving the value '"+metavalue_str+"' as an indexed string");
+						}
+						setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
 					}
-					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
+					else if (!is_page_level) {
+						System.out.println("         Its value was the empty string");
+					}
 				}
 			}
 		}
@@ -540,37 +544,41 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		// 		            "http://catalog.hathitrust.org/api/volumes/brief/oclc/37262723.json",
 		// 		            "http://catalog.hathitrust.org/api/volumes/full/oclc/37262723.json"
 		// 		        ]
+		//
+		// Can also be just a single /Record entry
 		
 		JSONArray meop_metavalue_array = ef_metadata.getJSONArray("mainEntityOfPage");
 		
-		/*
-		if (meop_metavalue_array.length() != 3) {
+		
+		if ((meop_metavalue_array.length() != 1) && (meop_metavalue_array.length() != 3)) {
 			if (!is_page_level) {
 				// To avoid unnecessary spamming of the error, 
 				// only print it out for the top-level volume metadata case
 				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' contained "
-						+ meop_metavalue_array.length() +" items, when 3 were expected");
+						+ meop_metavalue_array.length() +" items, when either 1 or 3 were expected");
 				System.err.println("**** Indexing mainEntityOfPage value as is: " + meop_metavalue_array.toString());
 			}
 		}
-	*/
+	
 		String meop_first_val = meop_metavalue_array.getString(0);
 		
-		if (meop_first_val.startsWith("https://catalog.hathitrust.org/Record/") && (!ef_metadata.isNull("oclc"))) {
-			setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPageRecord", meop_first_val);
+		if (meop_first_val.startsWith("https://catalog.hathitrust.org/Record/")) {
+			setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPageCatalogRecord", meop_first_val);
 		}
 		else {
 			if (!is_page_level) {
 				// To avoid unnecessary spamming of the error, 
 				// only print it out for the top-level volume metadata case
-				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' was: "
-						+ meop_metavalue_array.toString() + ", and no companion 'oclc' entry was found");
+				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage[0]' "
+						+ "did not start with prefix https://catalog.hathitrust.org/Record/\n"
+						+ "Entry was: " + meop_metavalue_array.toString());
 			}
 		}
 		
 		// TODO
 		// Consider removing the following, if above mainEntityOfPageRecord doesn't lead to any warning being issued
-		setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue_array);
+		//setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue_array);
+		
 		/*
 		for (int i=0; i<3; i++) {
 			try {
