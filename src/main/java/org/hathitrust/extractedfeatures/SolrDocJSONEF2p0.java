@@ -266,6 +266,63 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		}
 	}
 	
+	protected void appendSingleStringsSolrDocJSON(JSONObject solr_doc_json, String id, JSONObject ef_metadata, boolean is_page_level)
+	{
+		for (String metaname: metadata_single_string) {
+
+			if (!ef_metadata.isNull(metaname)){
+				String metavalue_str = ef_metadata.getString(metaname);
+				if (metaname.equals("id")) {
+					// Guard against clash with 'id' used by Solr
+					metaname = "htid";
+				}
+				setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
+			}
+		}
+
+	}
+	
+	protected void appendSingleIntegersSolrDocJSON(JSONObject solr_doc_json, String id, JSONObject ef_metadata, boolean is_page_level)
+	{
+		for (String metaname: metadata_single_int) {
+			if (!ef_metadata.isNull(metaname)) {
+				try {
+					int metavalue_int = ef_metadata.getInt(metaname);
+					setSingleValueIntegerMetadata(is_page_level, solr_doc_json, metaname, metavalue_int);
+				}
+				catch (org.json.JSONException e) {
+					if (!is_page_level) {
+						// To avoid unnecessary spamming of the error, 
+						// only print it out for the top-level volume metadata case
+						System.out.println("Warning: For id = '"+id+"' accessing '"+metaname+"' as an int");
+					}
+					
+					String metavalue_str = ef_metadata.getString(metaname);
+					
+					if (!metavalue_str.isEmpty()) {
+						if (!is_page_level) {
+							System.out.println("         Saving the value '"+metavalue_str+"' as an indexed string");
+						}
+						setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
+					}
+					else if (!is_page_level) {
+						System.out.println("         Its value was the empty string");
+					}
+				}
+			}
+		}
+	}
+	
+	protected void appendSingleURIsSolrDocJSON(JSONObject solr_doc_json, String id, JSONObject ef_metadata, boolean is_page_level)
+	{
+		for (String metaname: metadata_single_uri) {
+			if (!ef_metadata.isNull(metaname)) {
+				//String metavalue_uri = (String)metavalue_var;
+				String metavalue_uri = ef_metadata.getString(metaname);
+				setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname, metavalue_uri);
+			}
+		}
+	}
 	
 	protected JSONObject generateMetadataSolrDocJSON(String id, JSONObject ef_metadata, boolean is_page_level)
 	{
@@ -324,6 +381,9 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		JSONObject solr_doc_json = new JSONObject();
 		solr_doc_json.put("id", id); // Required field, as per the defined Solr schema
 
+		appendSingleStringsSolrDocJSON(solr_doc_json,id,ef_metadata,is_page_level);
+		
+		/*
 		for (String metaname: metadata_single_string) {
 			
 			if (!ef_metadata.isNull(metaname)){
@@ -335,7 +395,11 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
 			}
 		}
+		*/
 		
+		appendSingleIntegersSolrDocJSON(solr_doc_json,id,ef_metadata,is_page_level);
+		
+		/*
 		for (String metaname: metadata_single_int) {
 			if (!ef_metadata.isNull(metaname)) {
 				try {
@@ -363,7 +427,11 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				}
 			}
 		}
+		*/
 		
+		appendSingleURIsSolrDocJSON(solr_doc_json,id,ef_metadata,is_page_level);
+		
+		/*
 		for (String metaname: metadata_single_uri) {
 			if (!ef_metadata.isNull(metaname)) {
 				//String metavalue_uri = (String)metavalue_var;
@@ -371,7 +439,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				setSingleValueURIMetadata(is_page_level, solr_doc_json, metaname, metavalue_uri);
 			}
 		}
-		
+		*/
 		
 		for (String metaname: metadata_multiple) {
 			
@@ -457,16 +525,24 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 						
 						JSONObject metavalue_id_name_type = metavalues_id_name_type.getJSONObject(i);
 						String metavalue_id   = metavalue_id_name_type.getString("id");
-						String metavalue_name = metavalue_id_name_type.getString("name");
-						String metavalue_type = metavalue_id_name_type.getString("type");
-
 						metavalues_id.put(metavalue_id);
-						metavalues_name.put(metavalue_name);
+						
+						// If the URI based 'id' isn't fully recognized, then no mapping to a name occurs
+						// e.g. "id": "http://id.loc.gov/vocabulary/countries/fr#"
+						// leads to there being no 'name' entry
+						if (!metavalue_id_name_type.isNull("name")) {
+							String metavalue_name = metavalue_id_name_type.getString("name");
+							metavalues_name.put(metavalue_name);
+						}
+						
+						String metavalue_type = metavalue_id_name_type.getString("type");
 						metavalues_type.put(metavalue_type);
 					}
 					
 					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Id",   metavalues_id);
-					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
+					if (metavalues_name.length()>0) {
+						setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
+					}
 					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Type", metavalues_type);
 				}
 				else {
@@ -474,19 +550,23 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					JSONObject metavalue_id_name_type = ef_metadata.getJSONObject(metaname);
 					try {
 						String metavalue_id = metavalue_id_name_type.getString("id");
-						String metavalue_name = metavalue_id_name_type.getString("name");
-						String metavalue_type = metavalue_id_name_type.getString("type");
-
 						JSONArray metavalues_id   = new JSONArray();
-						JSONArray metavalues_name = new JSONArray();
-						JSONArray metavalues_type = new JSONArray();
-
 						metavalues_id.put(metavalue_id);
-						metavalues_name.put(metavalue_name);
-						metavalues_type.put(metavalue_type);
-
 						setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Id",   metavalues_id);
-						setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
+						
+						// If the URI based 'id' isn't fully recognized, then no mapping to a name occurs
+						// e.g. "id": "http://id.loc.gov/vocabulary/countries/fr#"
+						// leads to there being no 'name' entry
+						if (!metavalue_id_name_type.isNull("name")) {
+							String metavalue_name = metavalue_id_name_type.getString("name");
+							JSONArray metavalues_name = new JSONArray();
+							metavalues_name.put(metavalue_name);
+							setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
+						}
+						
+						String metavalue_type = metavalue_id_name_type.getString("type");
+						JSONArray metavalues_type = new JSONArray();
+						metavalues_type.put(metavalue_type);
 						setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Type", metavalues_type);
 					}
 					catch (Exception e) {
@@ -507,35 +587,49 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		
 		// "type"				
 		//   Rename of 'bibliographicFormat' and changes from string to array e.g. [DataFeedItem, Book] */
-		JSONArray type_metavalue_array= ef_metadata.getJSONArray("type");
-		
-		String type_metavalue_item = type_metavalue_array.getString(0);
-		String type_metavalue_bibformat = type_metavalue_array.getString(1);
-		
-		if (!type_metavalue_item.equals("DataFeedItem")) {
-			System.err.println("**** Warning: For id = '"+id+"' the metadata entry for type[0] was "
-					+"'"+type_metavalue_item +"' rather than 'DataFeedItem'");
+		if (!ef_metadata.isNull("type")) {
+			JSONArray type_metavalue_array= ef_metadata.getJSONArray("type");
+
+			String type_metavalue_item = type_metavalue_array.getString(0);
+			String type_metavalue_bibformat = type_metavalue_array.getString(1);
+
+			if (!type_metavalue_item.equals("DataFeedItem")) {
+				if (!is_page_level) {
+					System.err.println("**** Warning: For id = '"+id+"' the metadata entry for type[0] was "
+							+"'"+type_metavalue_item +"' rather than 'DataFeedItem'");
+				}
+			}
+			else {
+				setSingleValueStringMetadata(is_page_level, solr_doc_json, "bibliographicFormat", type_metavalue_bibformat);
+			}
 		}
 		else {
-			setSingleValueStringMetadata(is_page_level, solr_doc_json, "bibliographicFormat", type_metavalue_bibformat);
+			if (!is_page_level) {
+				System.err.println("**** Warning: For id = '"+id+"' no entry for 'type' was found");
+			}			
 		}
-		
 		// "sourceInstitution"
 		//   Retained, but value changes from string to {name, type} 
 		//   e.g., [name: "COO", "type": "http://id.loc.gov/ontologies/bibframe/Organization"
-		JSONObject sourceinst_metavalue_object= ef_metadata.getJSONObject("sourceInstitution");
-		
-		String sourceinst_metavalue_name = sourceinst_metavalue_object.getString("name");
-		String sourceinst_metavalue_type = sourceinst_metavalue_object.getString("type");
-		
-		if (!sourceinst_metavalue_type.equals("http://id.loc.gov/ontologies/bibframe/Organization")) {
-			System.err.println("**** Warning: For id = '"+id+"' the metadata entry for sourceInstitute.type was "
-					+"'"+sourceinst_metavalue_type +"' rather than 'http://id.loc.gov/ontologies/bibframe/Organization'");
+		if (!ef_metadata.isNull("sourceInstitution")) { 
+			JSONObject sourceinst_metavalue_object= ef_metadata.getJSONObject("sourceInstitution");
+
+			String sourceinst_metavalue_name = sourceinst_metavalue_object.getString("name");
+			String sourceinst_metavalue_type = sourceinst_metavalue_object.getString("type");
+
+			if (!sourceinst_metavalue_type.equals("http://id.loc.gov/ontologies/bibframe/Organization")) {
+				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for sourceInstitute.type was "
+						+"'"+sourceinst_metavalue_type +"' rather than 'http://id.loc.gov/ontologies/bibframe/Organization'");
+			}
+			else {
+				setSingleValueStringMetadata(is_page_level, solr_doc_json, "sourceInstitution", sourceinst_metavalue_name);
+			}
 		}
 		else {
-			setSingleValueStringMetadata(is_page_level, solr_doc_json, "sourceInstitution", sourceinst_metavalue_name);
+			if (!is_page_level) {
+				System.err.println("**** Warning: For id = '"+id+"' no entry for 'sourceInstitution' was found");
+			}			
 		}
-		
 		
 		// "mainEntityOfPage" 
 		//   New field, for example:
@@ -546,51 +640,40 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		// 		        ]
 		//
 		// Can also be just a single /Record entry
-		
-		JSONArray meop_metavalue_array = ef_metadata.getJSONArray("mainEntityOfPage");
-		
-		
-		if ((meop_metavalue_array.length() != 1) && (meop_metavalue_array.length() != 3)) {
-			if (!is_page_level) {
-				// To avoid unnecessary spamming of the error, 
-				// only print it out for the top-level volume metadata case
-				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' contained "
-						+ meop_metavalue_array.length() +" items, when either 1 or 3 were expected");
-				System.err.println("**** Indexing mainEntityOfPage value as is: " + meop_metavalue_array.toString());
+		if (!ef_metadata.isNull("mainEntityOfPage")) { 
+			JSONArray meop_metavalue_array = ef_metadata.getJSONArray("mainEntityOfPage");
+
+
+			if ((meop_metavalue_array.length() != 1) && (meop_metavalue_array.length() != 3)) {
+				if (!is_page_level) {
+					// To avoid unnecessary spamming of the error, 
+					// only print it out for the top-level volume metadata case
+					System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' contained "
+							+ meop_metavalue_array.length() +" items, when either 1 or 3 were expected");
+					System.err.println("**** Indexing mainEntityOfPage value as is: " + meop_metavalue_array.toString());
+				}
 			}
-		}
-	
-		String meop_first_val = meop_metavalue_array.getString(0);
-		
-		if (meop_first_val.startsWith("https://catalog.hathitrust.org/Record/")) {
-			setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPageCatalogRecord", meop_first_val);
+
+			String meop_first_val = meop_metavalue_array.getString(0);
+
+			if (meop_first_val.startsWith("https://catalog.hathitrust.org/Record/")) {
+				setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPageCatalogRecord", meop_first_val);
+			}
+			else {
+				if (!is_page_level) {
+					// To avoid unnecessary spamming of the error, 
+					// only print it out for the top-level volume metadata case
+					System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage[0]' "
+							+ "did not start with prefix https://catalog.hathitrust.org/Record/\n"
+							+ "Entry was: " + meop_metavalue_array.toString());
+				}
+			}
 		}
 		else {
 			if (!is_page_level) {
-				// To avoid unnecessary spamming of the error, 
-				// only print it out for the top-level volume metadata case
-				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage[0]' "
-						+ "did not start with prefix https://catalog.hathitrust.org/Record/\n"
-						+ "Entry was: " + meop_metavalue_array.toString());
-			}
+				System.err.println("**** Warning: For id = '"+id+"' no entry for 'mainEntityOfPage' was found");
+			}			
 		}
-		
-		// TODO
-		// Consider removing the following, if above mainEntityOfPageRecord doesn't lead to any warning being issued
-		//setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue_array);
-		
-		/*
-		for (int i=0; i<3; i++) {
-			try {
-			String meop_metavalue = meop_metavalue_array.getString(i);
-			setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
-			}
-			catch (org.json.JSONException e) {
-				System.err.println("**** Error: For id = '"+id+"' accessing mainEntityOfPage["+i+"] threw exception");
-				e.printStackTrace();
-			}
-		}*/
-			
 		
 		return solr_doc_json;
 	}	
