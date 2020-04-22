@@ -494,6 +494,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 							System.err.println("**** where metavalue was: "+metavalue_id_name_type.toString());
 							e.printStackTrace();
 						}
+					}
 				}
 			}
 		}
