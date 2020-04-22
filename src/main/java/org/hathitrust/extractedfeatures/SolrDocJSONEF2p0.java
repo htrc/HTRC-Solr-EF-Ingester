@@ -215,6 +215,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		}
 		
 		String metavalue_str = Integer.toString(metavalue_int);
+		setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str); // put in as an indexed text field for good measure
 		setSingleValueMetadataForFaceting(is_page_level, solr_doc_json, metaname, metavalue_str);	
 	}
 	
@@ -337,8 +338,18 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		
 		for (String metaname: metadata_single_int) {
 			if (!ef_metadata.isNull(metaname)) {
-				int metavalue_int = ef_metadata.getInt(metaname);
-				setSingleValueIntegerMetadata(is_page_level, solr_doc_json, metaname, metavalue_int);
+				try {
+					int metavalue_int = ef_metadata.getInt(metaname);
+					setSingleValueIntegerMetadata(is_page_level, solr_doc_json, metaname, metavalue_int);
+				}
+				catch (org.json.JSONException e) {
+					System.err.println("**** Error: For id = '"+id+"' accessing '"+metaname+"' as an int");
+					e.printStackTrace();
+					
+					String metavalue_str = ef_metadata.getString(metaname);
+					System.err.println("**** Saving the value '"+metavalue_str+"' as a indexed string");
+					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
+				}
 			}
 		}
 		
@@ -508,21 +519,22 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		if (meop_metavalue_array.length() != 3) {
 			System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' contained "
 					+ meop_metavalue_array.length() +" items, when 3 were expected");
+			System.err.println("**** Indexing mainEntityOfPage value as is: " + meop_metavalue_array.toString());
 		}
-		else {
-			setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue_array);
-			/*
-			for (int i=0; i<3; i++) {
-				try {
-				String meop_metavalue = meop_metavalue_array.getString(i);
-				setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
-				}
-				catch (org.json.JSONException e) {
-					System.err.println("**** Error: For id = '"+id+"' accessing mainEntityOfPage["+i+"] threw exception");
-					e.printStackTrace();
-				}
-			}*/
-		}	
+	
+		setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue_array);
+		/*
+		for (int i=0; i<3; i++) {
+			try {
+			String meop_metavalue = meop_metavalue_array.getString(i);
+			setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue);
+			}
+			catch (org.json.JSONException e) {
+				System.err.println("**** Error: For id = '"+id+"' accessing mainEntityOfPage["+i+"] threw exception");
+				e.printStackTrace();
+			}
+		}*/
+			
 		
 		return solr_doc_json;
 	}	
