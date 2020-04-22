@@ -353,7 +353,7 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					
 					String metavalue_str = ef_metadata.getString(metaname);
 					if (!is_page_level) {
-						System.err.println("**** Saving the value '"+metavalue_str+"' as a indexed string");
+						System.err.println("**** Saving the value '"+metavalue_str+"' as an indexed string");
 					}
 					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
 				}
@@ -468,21 +468,32 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				else {
 					// If not an array or {}, then a single {}
 					JSONObject metavalue_id_name_type = ef_metadata.getJSONObject(metaname);
-					String metavalue_id = metavalue_id_name_type.getString("id");
-					String metavalue_name = metavalue_id_name_type.getString("name");
-					String metavalue_type = metavalue_id_name_type.getString("type");
-					
-					JSONArray metavalues_id   = new JSONArray();
-					JSONArray metavalues_name = new JSONArray();
-					JSONArray metavalues_type = new JSONArray();
-					
-					metavalues_id.put(metavalue_id);
-					metavalues_name.put(metavalue_name);
-					metavalues_type.put(metavalue_type);
-					
-					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Id",   metavalues_id);
-					setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
-					setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Type", metavalues_type);
+					try {
+						String metavalue_id = metavalue_id_name_type.getString("id");
+						String metavalue_name = metavalue_id_name_type.getString("name");
+						String metavalue_type = metavalue_id_name_type.getString("type");
+
+						JSONArray metavalues_id   = new JSONArray();
+						JSONArray metavalues_name = new JSONArray();
+						JSONArray metavalues_type = new JSONArray();
+
+						metavalues_id.put(metavalue_id);
+						metavalues_name.put(metavalue_name);
+						metavalues_type.put(metavalue_type);
+
+						setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Id",   metavalues_id);
+						setMultipleValueStringMetadata(is_page_level, solr_doc_json, metaname+"Name", metavalues_name);
+						setMultipleValueURIMetadata(is_page_level, solr_doc_json, metaname+"Type", metavalues_type);
+					}
+					catch (Exception e) {
+						if (!is_page_level) {
+							// To avoid unnecessary spamming of the error, 
+							// only print it out for the top-level volume metadata case
+
+							System.err.println("**** Error: For id = '"+id+"' processing '"+metaname+"' as a JSONObject");
+							System.err.println("**** where metavalue was: "+metavalue_id_name_type.toString());
+							e.printStackTrace();
+						}
 				}
 			}
 		}
