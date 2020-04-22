@@ -343,11 +343,18 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 					setSingleValueIntegerMetadata(is_page_level, solr_doc_json, metaname, metavalue_int);
 				}
 				catch (org.json.JSONException e) {
-					System.err.println("**** Error: For id = '"+id+"' accessing '"+metaname+"' as an int");
-					e.printStackTrace();
+					if (!is_page_level) {
+						// To avoid unnecessary spamming of the error, 
+						// only print it out for the top-level volume metadata case
+
+						System.err.println("**** Error: For id = '"+id+"' accessing '"+metaname+"' as an int");
+						e.printStackTrace();
+					}
 					
 					String metavalue_str = ef_metadata.getString(metaname);
-					System.err.println("**** Saving the value '"+metavalue_str+"' as a indexed string");
+					if (!is_page_level) {
+						System.err.println("**** Saving the value '"+metavalue_str+"' as a indexed string");
+					}
 					setSingleValueStringMetadata(is_page_level, solr_doc_json, metaname, metavalue_str);
 				}
 			}
@@ -388,9 +395,13 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				}
 				else {
 					// Unrecognized JSON type for field 'metaname'
-					System.err.println("SolrDocJSON2p1::generateMetadataSolrDocJSON(): For document id '"+id+"'"
-										+" Expecting JSONArray or String for value of metadata '"+metaname+"'"
-										+" but encountered type '"+metavalues_var.getClass() + "'");	
+					if (!is_page_level) {
+						// To avoid unnecessary spamming of the error, 
+						// only print it out for the top-level volume metadata case
+						System.err.println("SolrDocJSON2p0::generateMetadataSolrDocJSON(): For document id '"+id+"'"
+								+" Expecting JSONArray or String for value of metadata '"+metaname+"'"
+								+" but encountered type '"+metavalues_var.getClass() + "'");	
+					}
 				}
 			}
 		}
@@ -416,9 +427,13 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 				}
 				else {
 					// Unrecognized JSON type for field 'metaname'
-					System.err.println("SolrDocJSON2p1::generateMetadataSolrDocJSON(): For document id '"+id+"'"
-										+" Expecting JSONArray or String for value of metadata '"+metaname+"'"
-										+" but encountered type '"+metavalues_var.getClass() + "'");	
+					if (!is_page_level) {
+						// To avoid unnecessary spamming of the error, 
+						// only print it out for the top-level volume metadata case
+						System.err.println("SolrDocJSON2p1::generateMetadataSolrDocJSON(): For document id '"+id+"'"
+								+" Expecting JSONArray or String for value of metadata '"+metaname+"'"
+								+" but encountered type '"+metavalues_var.getClass() + "'");	
+					}
 				}
 			}
 		}
@@ -516,12 +531,33 @@ public class SolrDocJSONEF2p0 extends SolrDocJSON
 		
 		JSONArray meop_metavalue_array = ef_metadata.getJSONArray("mainEntityOfPage");
 		
+		/*
 		if (meop_metavalue_array.length() != 3) {
-			System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' contained "
-					+ meop_metavalue_array.length() +" items, when 3 were expected");
-			System.err.println("**** Indexing mainEntityOfPage value as is: " + meop_metavalue_array.toString());
+			if (!is_page_level) {
+				// To avoid unnecessary spamming of the error, 
+				// only print it out for the top-level volume metadata case
+				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' contained "
+						+ meop_metavalue_array.length() +" items, when 3 were expected");
+				System.err.println("**** Indexing mainEntityOfPage value as is: " + meop_metavalue_array.toString());
+			}
 		}
-	
+	*/
+		String meop_first_val = meop_metavalue_array.getString(0);
+		
+		if (meop_first_val.startsWith("https://catalog.hathitrust.org/Record/") && (!ef_metadata.isNull("oclc"))) {
+			setSingleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPageRecord", meop_first_val);
+		}
+		else {
+			if (!is_page_level) {
+				// To avoid unnecessary spamming of the error, 
+				// only print it out for the top-level volume metadata case
+				System.err.println("**** Warning: For id = '"+id+"' the metadata entry for 'mainEntityOfPage' was: "
+						+ meop_metavalue_array.toString() + ", and no companion 'oclc' entry was found");
+			}
+		}
+		
+		// TODO
+		// Consider removing the following, if above mainEntityOfPageRecord doesn't lead to any warning being issued
 		setMultipleValueURIMetadata(is_page_level, solr_doc_json, "mainEntityOfPage", meop_metavalue_array);
 		/*
 		for (int i=0; i<3; i++) {
