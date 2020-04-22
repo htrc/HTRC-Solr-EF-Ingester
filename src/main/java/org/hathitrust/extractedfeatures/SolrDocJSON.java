@@ -793,7 +793,9 @@ public abstract class SolrDocJSON implements Serializable {
 		}
 		catch (IOException e) {
 		        System.err.println("Solr core update failed when processing id: " + info_volume_id + "." + info_page_id);
-			e.printStackTrace();
+		        System.err.println("Solr Doc posted for ingest was:\n" + solr_add_doc_json_str);
+		        
+		        e.printStackTrace();
 		}
 
 		catch (Exception e) {
