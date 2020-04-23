@@ -59,7 +59,8 @@ public class PerVolumeUtil implements Serializable
 		_icu_tokenize   = icu_tokenize;
 		_strict_file_io = strict_file_io;
 		
-		_solr_doc_json = new SolrDocJSONEF15(); // EF 1.5
+		//_solr_doc_json = new SolrDocJSONEF15(); // EF 1.5
+		_solr_doc_json = new SolrDocJSONEF20(); // EF 2.0
 		
 		_whitelist_bloomfilter = null;
 		_universal_langmap = null;
@@ -227,7 +228,8 @@ public class PerVolumeUtil implements Serializable
 		
 		String volume_id = page_rec.getString("documentId");
 		String collection_name = page_rec.getString("collectionName");
-		if (!volume_id.equals(collection_name)) {
+		//if (!volume_id.equals(collection_name)) {
+		if (collection_name.endsWith(":")) { // sign of old bug in concept JSON data where full HT ID is split across vol and col fields
 			volume_id = collection_name+"/"+volume_id;
 		}
 		String page_id_filename = page_rec.getString("pageId");
