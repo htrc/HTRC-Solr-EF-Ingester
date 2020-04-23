@@ -29,7 +29,7 @@ import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 
-// SolrDocJSONEF2.0 (2 point 0)
+// SolrDocJSONEF20 = SolrDoc JSON Extract Features 2.0 
 public class SolrDocJSONEF20 extends SolrDocJSON 
 {	
 	/* Mapping of changes from EF1.5 JSON format to EF2.0 */

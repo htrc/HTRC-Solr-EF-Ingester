@@ -23,7 +23,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 	{
 		super();
 		
-		System.out.println("Constructing: UniversalPOS Language Map for OpenNLP");
+		System.out.println("Constructing: UniversalPOS Language Map for Heterogeneous");
 				
 		_all_langmaps = new HashMap<String,HashMap<String,String>>();
 		 
@@ -82,7 +82,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 			_all_langmaps.put(lang_key, pos_lookup);
 		});
 
-		System.out.println("Done Constructing UniversalPOS Language Map for OpenNLP");
+		System.out.println("Done Constructing UniversalPOS Language Map for heterogeneous POS set");
 		
 	}
 	
@@ -96,19 +96,19 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 		return _all_langmaps.containsKey(lang_key);
 	}
 
-	public String getUniversalLanguagePOSUnchecked(String lang_key,String opennlp_pos_key)
+	public String getUniversalLanguagePOSUnchecked(String lang_key,String heterogeneous_pos_key)
 	{
 		String universal_pos = null;
 		
 		HashMap<String,String> langmap = _all_langmaps.get(lang_key);
 		if (langmap != null) {
-			universal_pos = langmap.get(opennlp_pos_key);
+			universal_pos = langmap.get(heterogeneous_pos_key);
 		}
 		
 		return universal_pos;
 	} 
 	
-	public String getUniversalLanguagePOSChecked(String lang_key,String opennlp_pos_key)
+	public String getUniversalLanguagePOSChecked(String lang_key,String heterogeneous_pos_key)
 	{
 		if (!_all_langmaps.containsKey(lang_key)) {
 			// Not a language with a POS map
@@ -118,10 +118,10 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 		String universal_pos = null;
 		
 		HashMap<String,String> langmap = _all_langmaps.get(lang_key);
-		universal_pos = langmap.get(opennlp_pos_key);
+		universal_pos = langmap.get(heterogeneous_pos_key);
 		
 		if (universal_pos == null) {
-			String missing_lang_pos = lang_key + ":" + opennlp_pos_key;
+			String missing_lang_pos = lang_key + ":" + heterogeneous_pos_key;
 
 			// Maintain some stats on how often the POS for this language is missing
 			Integer mpos_freq = 0;
@@ -130,7 +130,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 			}
 			else {
 				System.err.println("Warning: for language key '"+lang_key
-						+"' failed to find POS '" + opennlp_pos_key + "'");
+						+"' failed to find POS '" + heterogeneous_pos_key + "'");
 				System.err.println("Defaulting to POS 'X' (i.e., 'other')");
 			}
 			mpos_freq++;
@@ -142,7 +142,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 		return universal_pos;
 	} 
 	
-	public Tuple2<String,String> getUniversalLanguagePOSPair(String[] lang_keys,String opennlp_pos_key)
+	public Tuple2<String,String> getUniversalLanguagePOSPair(String[] lang_keys,String heterogeneous_pos_key)
 	{
 		String universal_pos = null;
 		String selected_lang = null;
@@ -150,7 +150,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 		for (int li=0; li<lang_keys.length; li++) {
 			String lang_key = lang_keys[li];
 			
-			universal_pos = getUniversalLanguagePOSUnchecked(lang_key,opennlp_pos_key);
+			universal_pos = getUniversalLanguagePOSUnchecked(lang_key,heterogeneous_pos_key);
 			if (universal_pos != null) {
 				selected_lang = lang_key;
 				break;
@@ -169,7 +169,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 			
 			// If here, then is a POS language => default to "X" 
 			
-			String missing_lang_pos = selected_lang + ":" + opennlp_pos_key;
+			String missing_lang_pos = selected_lang + ":" + heterogeneous_pos_key;
 
 			// Maintain some stats on how often the POS for this language is missing
 			Integer mpos_freq = 0;
@@ -178,7 +178,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 			}
 			else {
 				System.err.println("Warning: for language key '"+selected_lang
-						+"' failed to find POS '" + opennlp_pos_key + "'");
+						+"' failed to find POS '" + heterogeneous_pos_key + "'");
 				System.err.println("Defaulting to POS 'X' (i.e., 'other')");
 			}
 			mpos_freq++;

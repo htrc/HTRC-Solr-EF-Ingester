@@ -23,7 +23,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 	{
 		super();
 		
-		System.out.println("Constructing: UniversalPOS Language Map");
+		System.out.println("Constructing: UniversalPOS Language Map for homogeneous POS set");
 		
 		_pos_lookup = new HashMap<String,String>();
 		 
@@ -76,7 +76,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 			}
 		});
 
-		System.out.println("Done Constructing UniversalPOS Language Map for StanfordNLP");
+		System.out.println("Done Constructing UniversalPOS Language Map for homogeneous POS map");
 		
 	}
 	
@@ -93,17 +93,17 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 		return true; 
 	}
 
-	public String getUniversalLanguagePOSUnchecked(String lang_key, String stanfordnlp_pos_key)
+	public String getUniversalLanguagePOSUnchecked(String lang_key, String homogeneous_pos_key)
 	{
 		// In unchecked version, OK to return 'null' if POS-key not present
-		String universal_pos = _pos_lookup.get(stanfordnlp_pos_key); 
+		String universal_pos = _pos_lookup.get(homogeneous_pos_key); 
 		
 		return universal_pos;
 	} 
 	
-	public String getUniversalLanguagePOSChecked(String lang_key, String stanfordnlp_pos_key)
+	public String getUniversalLanguagePOSChecked(String lang_key, String homogeneous_pos_key)
 	{
-		if (stanfordnlp_pos_key.equals("UKN")) {
+		if (homogeneous_pos_key.equals("UKN")) {
 			// Not a language for which POS tagging was possible 
 			return "";
 		}
@@ -111,10 +111,10 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 		String universal_pos = null;
 		
 		//HashMap<String,String> langmap = _all_langmaps.get(lang_key);
-		universal_pos = _pos_lookup.get(stanfordnlp_pos_key);
+		universal_pos = _pos_lookup.get(homogeneous_pos_key);
 		
 		if (universal_pos == null) {
-			String missing_lang_pos = lang_key + ":" + stanfordnlp_pos_key;
+			String missing_lang_pos = lang_key + ":" + homogeneous_pos_key;
 
 			// Maintain some stats on how often the POS for this language is missing
 			Integer mpos_freq = 0;
@@ -123,7 +123,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 			}
 			else {
 				System.err.println("Warning: for language key '"+lang_key
-						+"' failed to find POS '" + stanfordnlp_pos_key + "'");
+						+"' failed to find POS '" + homogeneous_pos_key + "'");
 				System.err.println("Defaulting to POS 'X' (i.e., 'other')");
 			}
 			mpos_freq++;
@@ -136,7 +136,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 	} 
 	
 	
-	public Tuple2<String,String> getUniversalLanguagePOSPair(String[] lang_keys,String stanfordnlp_pos_key)
+	public Tuple2<String,String> getUniversalLanguagePOSPair(String[] lang_keys,String homogeneous_pos_key)
 	{
 		String universal_pos = null;
 		String selected_lang = null;
@@ -144,7 +144,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 		for (int li=0; li<lang_keys.length; li++) {
 			String lang_key = lang_keys[li];
 			
-			universal_pos = getUniversalLanguagePOSUnchecked(lang_key,stanfordnlp_pos_key);
+			universal_pos = getUniversalLanguagePOSUnchecked(lang_key,homogeneous_pos_key);
 			if (universal_pos != null) {
 				selected_lang = lang_key;
 				break;
@@ -156,14 +156,14 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 			// => Lock onto the first language (highest probability when modeled)
 			selected_lang = lang_keys[0];
 			
-			if (!stanfordnlp_pos_key.equals("UKN")) {
+			if (!homogeneous_pos_key.equals("UKN")) {
 				// Not a language where POS tagging has occurred
 				return new Tuple2<String,String>(selected_lang,null);
 			}
 			
 			// If here, then is a POS language => default to "X" 
 			
-			String missing_lang_pos = selected_lang + ":" + stanfordnlp_pos_key;
+			String missing_lang_pos = selected_lang + ":" + homogeneous_pos_key;
 
 			// Maintain some stats on how often the POS for this language is missing
 			Integer mpos_freq = 0;
@@ -172,7 +172,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 			}
 			else {
 				System.err.println("Warning: for language key '"+selected_lang
-						+"' failed to find POS '" + stanfordnlp_pos_key + "'");
+						+"' failed to find POS '" + homogeneous_pos_key + "'");
 				System.err.println("Defaulting to POS 'X' (i.e., 'other')");
 			}
 			mpos_freq++;
