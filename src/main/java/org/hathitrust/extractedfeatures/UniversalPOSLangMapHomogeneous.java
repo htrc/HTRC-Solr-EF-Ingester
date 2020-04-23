@@ -13,19 +13,19 @@ import java.util.stream.Stream;
 
 import scala.Tuple2;
 
-public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
+public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 {
 
-	protected HashMap<String,HashMap<String,String>> _all_langmaps;
+	protected HashMap<String,String> _pos_lookup;
 	
 	
-	public UniversalPOSLangMapOpenNLP(String langmap_directory)
+	public UniversalPOSLangMapHomogeneous(String langmap_directory) 
 	{
 		super();
 		
-		System.out.println("Constructing: UniversalPOS Language Map for OpenNLP");
-				
-		_all_langmaps = new HashMap<String,HashMap<String,String>>();
+		System.out.println("Constructing: UniversalPOS Language Map");
+		
+		_pos_lookup = new HashMap<String,String>();
 		 
 		List<Path> langmap_paths = null;
 		
@@ -60,11 +60,7 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 		
 		// For-each language file
 		langmap_paths.forEach(langmap_path -> {
-			File langmap_file = langmap_path.toFile();
-			String lang_key = langmap_file.getName().substring(0,2);
-			
-			HashMap<String,String> pos_lookup = new HashMap<String,String>();
-			
+
 			// For-each line within that language file
 			try (Stream<String> lang_lines = Files.lines(langmap_path)) {
 				lang_lines.forEach(line -> {
@@ -72,56 +68,53 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 					if (line_parts.length == 2) {
 						String pos_key = line_parts[0];
 						String pos_val = line_parts[1];
-						pos_lookup.put(pos_key, pos_val);
+						_pos_lookup.put(pos_key, pos_val);
 					}
 				});
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
-			_all_langmaps.put(lang_key, pos_lookup);
 		});
 
-		System.out.println("Done Constructing UniversalPOS Language Map for OpenNLP");
+		System.out.println("Done Constructing UniversalPOS Language Map for StanfordNLP");
 		
 	}
 	
 	public int size()
 	{
-		return _all_langmaps.size();
+		return 1;
 	}
 	
 	public boolean containsLanguage(String lang_key)
 	{
-		return _all_langmaps.containsKey(lang_key);
+		// Always returning 'true' here is OK, as if EF2 hasn't been able to determine a language
+		// for a page of text, it sets all the POS labels for that page to "UKN"
+		// => we can spot "UKN" in the get-lookup methods below, and respond accordingly
+		return true; 
 	}
 
-	public String getUniversalLanguagePOSUnchecked(String lang_key,String opennlp_pos_key)
+	public String getUniversalLanguagePOSUnchecked(String lang_key, String stanfordnlp_pos_key)
 	{
-		String universal_pos = null;
-		
-		HashMap<String,String> langmap = _all_langmaps.get(lang_key);
-		if (langmap != null) {
-			universal_pos = langmap.get(opennlp_pos_key);
-		}
+		// In unchecked version, OK to return 'null' if POS-key not present
+		String universal_pos = _pos_lookup.get(stanfordnlp_pos_key); 
 		
 		return universal_pos;
 	} 
 	
-	public String getUniversalLanguagePOSChecked(String lang_key,String opennlp_pos_key)
+	public String getUniversalLanguagePOSChecked(String lang_key, String stanfordnlp_pos_key)
 	{
-		if (!_all_langmaps.containsKey(lang_key)) {
-			// Not a language with a POS map
+		if (stanfordnlp_pos_key.equals("UKN")) {
+			// Not a language for which POS tagging was possible 
 			return "";
 		}
 		
 		String universal_pos = null;
 		
-		HashMap<String,String> langmap = _all_langmaps.get(lang_key);
-		universal_pos = langmap.get(opennlp_pos_key);
+		//HashMap<String,String> langmap = _all_langmaps.get(lang_key);
+		universal_pos = _pos_lookup.get(stanfordnlp_pos_key);
 		
 		if (universal_pos == null) {
-			String missing_lang_pos = lang_key + ":" + opennlp_pos_key;
+			String missing_lang_pos = lang_key + ":" + stanfordnlp_pos_key;
 
 			// Maintain some stats on how often the POS for this language is missing
 			Integer mpos_freq = 0;
@@ -130,7 +123,7 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 			}
 			else {
 				System.err.println("Warning: for language key '"+lang_key
-						+"' failed to find POS '" + opennlp_pos_key + "'");
+						+"' failed to find POS '" + stanfordnlp_pos_key + "'");
 				System.err.println("Defaulting to POS 'X' (i.e., 'other')");
 			}
 			mpos_freq++;
@@ -142,7 +135,8 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 		return universal_pos;
 	} 
 	
-	public Tuple2<String,String> getUniversalLanguagePOSPair(String[] lang_keys,String opennlp_pos_key)
+	
+	public Tuple2<String,String> getUniversalLanguagePOSPair(String[] lang_keys,String stanfordnlp_pos_key)
 	{
 		String universal_pos = null;
 		String selected_lang = null;
@@ -150,7 +144,7 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 		for (int li=0; li<lang_keys.length; li++) {
 			String lang_key = lang_keys[li];
 			
-			universal_pos = getUniversalLanguagePOSUnchecked(lang_key,opennlp_pos_key);
+			universal_pos = getUniversalLanguagePOSUnchecked(lang_key,stanfordnlp_pos_key);
 			if (universal_pos != null) {
 				selected_lang = lang_key;
 				break;
@@ -162,14 +156,14 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 			// => Lock onto the first language (highest probability when modeled)
 			selected_lang = lang_keys[0];
 			
-			if (!_all_langmaps.containsKey(selected_lang)) {
-				// Not a language with a POS map
+			if (!stanfordnlp_pos_key.equals("UKN")) {
+				// Not a language where POS tagging has occurred
 				return new Tuple2<String,String>(selected_lang,null);
 			}
 			
 			// If here, then is a POS language => default to "X" 
 			
-			String missing_lang_pos = selected_lang + ":" + opennlp_pos_key;
+			String missing_lang_pos = selected_lang + ":" + stanfordnlp_pos_key;
 
 			// Maintain some stats on how often the POS for this language is missing
 			Integer mpos_freq = 0;
@@ -178,7 +172,7 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 			}
 			else {
 				System.err.println("Warning: for language key '"+selected_lang
-						+"' failed to find POS '" + opennlp_pos_key + "'");
+						+"' failed to find POS '" + stanfordnlp_pos_key + "'");
 				System.err.println("Defaulting to POS 'X' (i.e., 'other')");
 			}
 			mpos_freq++;
@@ -189,4 +183,6 @@ public class UniversalPOSLangMapOpenNLP extends UniversalPOSLangMap
 
 		return new Tuple2<String,String>(selected_lang,universal_pos);
 	} 
+	
+	
 }

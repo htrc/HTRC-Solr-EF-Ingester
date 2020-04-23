@@ -87,7 +87,7 @@ public class PerVolumeUtil implements Serializable
 
 			synchronized (_langmap_directory) {
 				if (_universal_langmap == null) {
-					_universal_langmap = new UniversalPOSLangMapOpenNLP(_langmap_directory);
+					_universal_langmap = new UniversalPOSLangMapHeterogeneous(_langmap_directory);
 				}
 			}
 		}
