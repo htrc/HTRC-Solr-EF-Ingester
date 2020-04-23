@@ -1,6 +1,5 @@
 package org.hathitrust.extractedfeatures;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -12,6 +11,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import scala.Tuple2;
+
+// *** !!!
+// Written, but not extensively tested, as processing EF 2.0 turned out to
+// need the Heterogeneous version of mapping afterall
+// *** !!!
 
 public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 {
