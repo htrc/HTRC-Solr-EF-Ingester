@@ -60,7 +60,7 @@ class PerPageJSONFlatmap implements FlatMapFunction<String, JSONObject>
 		_icu_tokenize   = icu_tokenize;
 		_strict_file_io = strict_file_io;
 		
-		_solr_doc_json = new SolrDocJSONEF1p5(); // EF 1.5
+		_solr_doc_json = new SolrDocJSONEF15(); // EF 1.5
 		
 		_whitelist_bloomfilter = null;
 	}

@@ -30,7 +30,7 @@ class PerVolumeLangStreamFlatmap implements FlatMapFunction<String, String>
 		_input_dir  = input_dir;
 		_verbosity  = verbosity;
 		
-		_solr_doc_json = new SolrDocJSONEF1p5();
+		_solr_doc_json = new SolrDocJSONEF15();
 		
 		_progress_accum = progress_accum;
 		_progress_step  = progress_step;
