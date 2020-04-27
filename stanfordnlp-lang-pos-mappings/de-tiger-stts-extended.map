@@ -63,14 +63,14 @@ XY	X
 PAV	ADV
 PIDAT	DET
 # following changes from PROP to DET
-PRELAT	    DET
+PRELAT	DET
 # following changes from PRT to ADP
-PTKVZ	    ADP
+PTKVZ	ADP
 # following changes from PRON to a DET
-PWAT	    DET
+PWAT	DET
 # following changes from PRON to ADV
-PWAV	    ADV
+PWAV	ADV
 ## VAIMP, VAINF and VAPP change from VERB to AUX
-VAIMP	  AUX
-VAINF	  AUX
-VAPP	  AUX
+VAIMP	AUX
+VAINF	AUX
+VAPP	AUX
