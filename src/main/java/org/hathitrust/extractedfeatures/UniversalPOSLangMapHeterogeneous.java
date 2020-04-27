@@ -68,11 +68,13 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 			// For-each line within that language file
 			try (Stream<String> lang_lines = Files.lines(langmap_path)) {
 				lang_lines.forEach(line -> {
-					String[] line_parts = line.split("\\t");
-					if (line_parts.length == 2) {
-						String pos_key = line_parts[0];
-						String pos_val = line_parts[1];
-						pos_lookup.put(pos_key, pos_val);
+					if (!line.startsWith("#")) {
+						String[] line_parts = line.split("\\t");
+						if (line_parts.length == 2) {
+							String pos_key = line_parts[0];
+							String pos_val = line_parts[1];
+							pos_lookup.put(pos_key, pos_val);
+						}
 					}
 				});
 			} catch (IOException e) {
