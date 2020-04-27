@@ -1,0 +1,74 @@
+ADJ	ADJ
+ADJWH	ADJ
+ADV	ADV
+ADVWH	ADV
+CC	CONJ
+CLO	PRON
+CLR	PRON
+CLS	PRON
+CS	CONJ
+DET	DET
+DETWH	DET
+ET	X
+I	X
+NC	NOUN
+NPP	NOUN
+P	ADP
+P+D	ADP
+P+PRON	ADP
+PONCT	.
+PREF	PRT
+PRO	PRON
+PROREL	PRON
+PROWH	PRON
+V	VERB
+VIMP	VERB
+VINF	VERB
+VPP	VERB
+VPR	VERB
+VS	VERB
+
+#
+# After a lot of searching around, eventually found:
+#  https://dkpro.github.io/dkpro-core/releases/1.9.0/docs/tagset-reference.html
+# Which listed all the 'fr' tags in question in a helpful way to interpret them
+# It explicitly named the extra ones used by Stanford's CoreNLP
+#
+# As a top-up to those in the Google Universal POS mapping, we therefore need:
+A	ADJ
+N	NOUN
+C	CONJ
+CL	PRON
+
+
+####
+# Appendix: Notes on trying to figure out what POS tag set Stanford CoreNLP was using
+####
+#
+#
+# From the code:
+
+# The Stanford FAQ:
+#  https://nlp.stanford.edu/software/pos-tagger-faq.html
+# lists French Treebank (FTB)
+# And links to:
+#   http://www.llf.cnrs.fr/Gens/Abeille/French-Treebank-fr.php
+
+# Empirically running it, throws up many tags which could be extended variants
+# This led to searching to searching Google for:
+#  "French Treeback" VIMP
+# which gave:
+#   https://books.google.co.nz/books?id=EEq6BQAAQBAJ&pg=PA228&lpg=PA228&dq=VIMP+CLO+CLS&source=bl&ots=KZDLDdC_p7&sig=ACfU3U3XY4S8Pz4ojd419A7-nQdONGle1w&hl=en&sa=X&ved=2ahUKEwjqnZrD_vvoAhVSxzgGHa-9DqcQ6AEwAHoECAkQAQ#v=onepage&q=VIMP%20CLO%20CLS&f=false
+
+# The Stanford code itself has:
+#   https://github.com/stanfordnlp/CoreNLP/blob/master/src/edu/stanford/nlp/trees/international/french/DybroFrenchHeadFinder.java
+# Which talks about CC Tagset + 'expansion'
+#
+# For a page on French CC tagset, see
+#  http://french-postaggers.tiddlyspot.com/
+
+# The linguist tool MElt (Crabbé & Candito, 2008) is based on CC taget
+
+# From mail post about Stanford French POS tagger
+# A ADJ ADJWH ADV ADVWH C CC CL CLO CLR CLS CS DET DETWH ET I N NC NPP P PREF PRO PROREL PROWH PUNC V VIMP VINF VPP VPR VS
+
