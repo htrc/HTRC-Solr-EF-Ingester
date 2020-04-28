@@ -31,6 +31,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 		
 		_pos_lookup = new HashMap<String,String>();
 		 
+		/*
 		List<Path> langmap_paths = null;
 		
 		URI langmap_directory_uri = null;
@@ -56,15 +57,21 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 		try (Stream<Path> stream_paths = Files.walk(langmap_directory_path)) {
 			langmap_paths = stream_paths
 	                .filter(Files::isRegularFile)
+	                .filter(filePath->!filePath.getFileName().endsWith("~"))
 	                .collect(Collectors.toList());
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		*/
+		
+		List<Path> langmap_paths = readMapFiles(langmap_directory);
 		
 		// For-each language file
 		langmap_paths.forEach(langmap_path -> {
 
+			fileMapToPOSLookup(langmap_path, _pos_lookup);
+			/*
 			// For-each line within that language file
 			try (Stream<String> lang_lines = Files.lines(langmap_path)) {
 				lang_lines.forEach(line -> {
@@ -79,7 +86,7 @@ public class UniversalPOSLangMapHomogeneous extends UniversalPOSLangMap
 				});
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
+			}*/
 		});
 
 		System.out.println("Done Constructing UniversalPOS Language Map for homogeneous POS map");
