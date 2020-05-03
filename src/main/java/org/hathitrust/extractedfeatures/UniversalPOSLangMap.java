@@ -48,10 +48,9 @@ public abstract class UniversalPOSLangMap
 		
 		try (Stream<Path> stream_paths = Files.walk(langmap_directory_path)) {
 			langmap_paths = stream_paths
-	                .filter(Files::isRegularFile)
-	                .filter(filePath->filePath.getFileName().endsWith(".map"))
-	                //.filter(filePath->!filePath.getFileName().endsWith("~"))
-	                .collect(Collectors.toList());
+			    .filter(Files::isRegularFile)
+			    .filter(filePath->filePath.getFileName().toString().endsWith(".map"))
+			    .collect(Collectors.toList());
 			
 			System.out.println("Filtered language maps to read in: " + langmap_paths);
 
