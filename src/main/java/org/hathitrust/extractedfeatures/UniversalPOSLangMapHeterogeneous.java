@@ -200,4 +200,19 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 
 		return new Tuple2<String,String>(selected_lang,universal_pos);
 	} 
+	
+	public static void main(String[] args)
+	{
+		if (args.length==1) {
+			String input_dir = args[0];
+			@SuppressWarnings("unused")
+			UniversalPOSLangMapHeterogeneous heterogeneous_map = new UniversalPOSLangMapHeterogeneous(input_dir);
+		}
+		else {
+			String program_name = Thread.currentThread().getStackTrace()[1].getClassName();
+			System.err.println("Usage: " + program_name + "pos-map-directory");
+			System.exit(-1);
+		}
+	}
+	
 }
