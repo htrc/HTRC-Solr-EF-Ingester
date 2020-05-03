@@ -52,6 +52,10 @@ public abstract class UniversalPOSLangMap
 	                .filter(filePath->filePath.getFileName().endsWith(".map"))
 	                //.filter(filePath->!filePath.getFileName().endsWith("~"))
 	                .collect(Collectors.toList());
+			
+			System.out.println("Filtered language maps to read in: " + langmap_paths);
+
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

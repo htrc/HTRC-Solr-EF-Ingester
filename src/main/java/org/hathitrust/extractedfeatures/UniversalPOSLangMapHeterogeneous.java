@@ -15,9 +15,7 @@ import scala.Tuple2;
 
 public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 {
-
 	protected HashMap<String,HashMap<String,String>> _all_langmaps;
-	
 	
 	public UniversalPOSLangMapHeterogeneous(String langmap_directory)
 	{
@@ -210,7 +208,7 @@ public class UniversalPOSLangMapHeterogeneous extends UniversalPOSLangMap
 		}
 		else {
 			String program_name = Thread.currentThread().getStackTrace()[1].getClassName();
-			System.err.println("Usage: " + program_name + "pos-map-directory");
+			System.err.println("Usage: " + program_name + " pos-map-directory");
 			System.exit(-1);
 		}
 	}
