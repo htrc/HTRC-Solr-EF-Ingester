@@ -192,12 +192,17 @@ public class ProcessForWhitelist implements Serializable
 	
 	public static void print_usage(HelpFormatter formatter, Options options)
 	{
-		formatter.printHelp("RUN.sh [options] input-dir output-dir", options);
+		formatter.printHelp("RUN.sh [options] input-dir", options);
 	}
 	
 	public static void main(String[] args) {
 		Options options = new Options();
 
+		Option output_dir_opt = new Option("o", "output-dir", true,
+				"Specify the directory where the word-counts are saved to");
+		output_dir_opt.setRequired(true);
+		options.addOption(output_dir_opt);
+		
 		Option verbosity_opt = new Option("v", "verbosity", true, 
 				"Set to control the level of debugging output [0=none, 1=some, 2=lots]");
 		verbosity_opt.setRequired(false);
