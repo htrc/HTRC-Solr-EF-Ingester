@@ -51,7 +51,7 @@ public class ProcessForWhitelistJSONFilelist implements Serializable
 
 	protected String generateSparkAppName(String exec_mode)
 	{
-		String spark_app_name = "[" + exec_mode + "] Extracted Features: Process for Whitelist";
+		String spark_app_name = "[" + exec_mode + "] Extracted Features: Process for Whitelist JSON Filelist";
 		spark_app_name += " [" + _json_list_filename + "]";
 	
 		return spark_app_name;
@@ -95,8 +95,8 @@ public class ProcessForWhitelistJSONFilelist implements Serializable
 		//System.err.println("***** icu_tokenize = " + icu_tokenize);
 		//System.err.println("***** num_part = " + num_partitions);
 
-		PerVolumeWordStreamFlatmap paged_solr_wordfreq_flatmap 
-			= new PerVolumeWordStreamFlatmap(_input_dir,_verbosity, 
+		PerVolumeWordStreamJSONFilelistFlatmap paged_solr_wordfreq_flatmap 
+			= new PerVolumeWordStreamJSONFilelistFlatmap(_input_dir,_verbosity, 
 								     per_vol_progress_accum,per_vol,
 								     icu_tokenize,
 								     strict_file_io);
