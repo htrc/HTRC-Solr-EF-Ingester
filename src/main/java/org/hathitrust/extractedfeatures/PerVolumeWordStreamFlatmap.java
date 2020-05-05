@@ -106,7 +106,9 @@ class PerVolumeWordStreamFlatmap implements FlatMapFunction<Text, String>
 					if (ef_page != null) {
 
 						ArrayList<String> page_word_list = SolrDocJSON.generateTokenPosCountWhitelistText(volume_id, page_id, ef_page, _icu_tokenize);					
-						all_word_list.addAll(page_word_list);
+						if (page_word_list != null) {
+							all_word_list.addAll(page_word_list);
+						}
 					}
 					else {
 						System.err.println("Skipping: " + page_id);
