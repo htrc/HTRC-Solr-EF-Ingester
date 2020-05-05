@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.apache.hadoop.io.Text;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.util.DoubleAccumulator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class PerVolumeWordStreamFlatmap implements FlatMapFunction<String, String>
+class PerVolumeWordStreamFlatmap implements FlatMapFunction<Text, String>
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -37,77 +39,97 @@ class PerVolumeWordStreamFlatmap implements FlatMapFunction<String, String>
 		_strict_file_io = strict_file_io;
 	}
 	
-	public Iterator<String> call(String json_file_in) throws IOException
+	public Iterator<String> call(Text json_text) throws IOException
 	{ 
 	     
-		String full_json_file_in = _input_dir + "/" + json_file_in;
-		JSONObject extracted_feature_record = JSONClusterFileIO.readJSONFile(full_json_file_in);
+		//String full_json_file_in = _input_dir + "/" + json_file_in;
+		//JSONObject extracted_feature_record = JSONClusterFileIO.readJSONFile(full_json_file_in);
 		
 		ArrayList<String> all_word_list = new ArrayList<String>();
 		
-		if (extracted_feature_record != null) {
-			String volume_id = extracted_feature_record.getString("id");
+		String json_text_str = json_text.toString();
 
-			JSONObject ef_features = extracted_feature_record.getJSONObject("features");
+		try {
+			
+			JSONObject extracted_feature_record  = new JSONObject(json_text_str);
 
-			int ef_page_count = ef_features.getInt("pageCount");
+			if (extracted_feature_record != null) {
+				// EF1.0 and EF1.5 ids where of the form:
+				//   hvd.32044090308966
+				// EF2.0 now full URI of the form:
+				//   https://data.analytics.hathitrust.org/extracted-features/20200210/hvd.32044090308966
+				
+				String volume_id = extracted_feature_record.getString("id");
+				volume_id = volume_id.replaceFirst("https://data.analytics.hathitrust.org/extracted-features/\\d+/", "");
+				
+				//JSONObject ef_metadata = extracted_feature_record.optJSONObject("metadata");		
 
-			if (_verbosity >= 1) {
-				System.out.println("Processing: " + json_file_in);
-				System.out.println("  pageCount = " + ef_page_count);
-			}
+				JSONObject ef_features = extracted_feature_record.getJSONObject("features");
 
-			JSONArray ef_pages = ef_features.getJSONArray("pages");
-			int ef_num_pages = ef_pages.length();
-			if (ef_num_pages != ef_page_count) {
-				System.err.println("Warning: number of page elements in JSON (" + ef_num_pages + ")"
-						+" does not match 'pageCount' metadata (" + ef_page_count + ")"); 
-			}
-	
-			if (_verbosity >= 2) {
-				System.out.print("  Pages: ");
-			}
+				int ef_page_count = ef_features.getInt("pageCount");
 
-			for (int i = 0; i < ef_page_count; i++) {
-				String formatted_i = String.format("page-%06d", i);
-				String page_id = volume_id + "." + formatted_i;
+				if (_verbosity >= 1) {
+					System.out.println("Processing volume id : " + volume_id);
+					System.out.println("  pageCount = " + ef_page_count);
+				}
+
+				JSONArray ef_pages = ef_features.getJSONArray("pages");
+				int ef_num_pages = ef_pages.length();
+				if (ef_num_pages != ef_page_count) {
+					System.err.println("Warning: number of page elements in JSON (" + ef_num_pages + ")"
+							+" does not match 'pageCount' metadata (" + ef_page_count + ")"); 
+				}
 
 				if (_verbosity >= 2) {
-					if (i>0) {
-						System.out.print(", ");
-					}
-					System.out.print(page_id);
+					System.out.print("  Pages: ");
 				}
 
-				if (i==(ef_page_count-1)) {
+				for (int i = 0; i < ef_page_count; i++) {
+					String formatted_i = String.format("page-%06d", i);
+					String page_id = volume_id + "." + formatted_i;
+
 					if (_verbosity >= 2) {
-						System.out.println();
+						if (i>0) {
+							System.out.print(", ");
+						}
+						System.out.print(page_id);
 					}
-				}
 
-				JSONObject ef_page = ef_pages.getJSONObject(i);
+					if (i==(ef_page_count-1)) {
+						if (_verbosity >= 2) {
+							System.out.println();
+						}
+					}
 
-				if (ef_page != null) {
-					
-					ArrayList<String> page_word_list = SolrDocJSON.generateTokenPosCountWhitelistText(volume_id, page_id, ef_page, _icu_tokenize);					
-					all_word_list.addAll(page_word_list);
-				}
-				else {
-					System.err.println("Skipping: " + page_id);
+					JSONObject ef_page = ef_pages.getJSONObject(i);
+
+					if (ef_page != null) {
+
+						ArrayList<String> page_word_list = SolrDocJSON.generateTokenPosCountWhitelistText(volume_id, page_id, ef_page, _icu_tokenize);					
+						all_word_list.addAll(page_word_list);
+					}
+					else {
+						System.err.println("Skipping: " + page_id);
+					}
 				}
 			}
-		}
-		else {
-			// File did not exist, or could not be parsed
-			String mess = "Failed to read in bzipped JSON file '" + full_json_file_in + "'";
+		}		
+		catch (Exception e) {
+			String first_320_chars = json_text_str.substring(0,320);
+			
+			String mess = "Failed to parse JSON content.  First 320 chars are: '" + first_320_chars + "'";
+			
 			if (_strict_file_io) {
+				//throw e;
 				throw new IOException(mess);
 			}
 			else {
 				System.err.println("Warning: " + mess);
 				System.out.println("Warning: " + mess);
+				
+				e.printStackTrace();
 			}
-		}
+		}	
 
 		_progress_accum.add(_progress_step);
 		
