@@ -43,10 +43,12 @@
 ADJ	ADJ
 ADP	ADP
 ADV	ADV
-#AUX	: auxiliary
+# auxiliary
+AUX	X
 CCONJ	CONJ
 DET	DET
-#INTJ	: interjection
+# interjection
+INTJ	X
 NOUN	NOUN
 NUM	NUM
 PART	PRT
@@ -54,7 +56,8 @@ PRON	PRON
 PROPN	NOUN
 PUNCT	.
 SCONJ	CONJ
-#SYM	: symbol
+# symbol
+SYM	X
 VERB	VERB
 X	X
 
