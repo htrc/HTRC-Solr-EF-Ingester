@@ -15,7 +15,7 @@ import scala.Tuple2;
 
 import org.apache.spark.SparkConf;
 
-public class ProcessForWhitelist implements Serializable
+public class ProcessForWhitelistJSONFilelist implements Serializable
 {
 	private static final long serialVersionUID = 1L;
 
@@ -29,12 +29,19 @@ public class ProcessForWhitelist implements Serializable
 	protected static final int DEFAULT_NUM_CORES = 6;
 	protected static final int DEFAULT_NUM_PARTITIONS = 3*DEFAULT_NUM_CORES; 
 	
+	// The above settings were changed in later Spark Main Programs to the following:
+	//protected static final int DEFAULT_NUM_CORES = 10;
+	//protected static final int MINIMUM_NUM_PARTITIONS = 10*DEFAULT_NUM_CORES; 
+	
+	//protected static final int DEFAULT_FILES_PER_PARTITION = 3000;
+	
+	
 	protected String _input_dir;
 	protected String _json_list_filename;
 	
 	protected int    _verbosity;
 
-	public ProcessForWhitelist(String input_dir, String json_list_filename, int verbosity)
+	public ProcessForWhitelistJSONFilelist(String input_dir, String json_list_filename, int verbosity)
 	{
 		_input_dir = input_dir;
 		_json_list_filename = (json_list_filename != null) ? json_list_filename : input_dir;
@@ -61,6 +68,7 @@ public class ProcessForWhitelist implements Serializable
 
 		String filename_root = _json_list_filename.replaceAll(".*/","").replaceAll("\\..*$","");
 		String output_directory = "whitelist-" + filename_root + "-out";
+		
 		if (ClusterFileIO.exists(output_directory))
 		{
 			System.err.println("Error: " + output_directory + " already exists.  Spark unable to write output data");
@@ -69,6 +77,8 @@ public class ProcessForWhitelist implements Serializable
 		}
 		
 		int num_partitions = Integer.getInteger("wcsa-ef-ingest.num-partitions", DEFAULT_NUM_PARTITIONS);
+		//int files_per_partition = Integer.getInteger("wcsa-ef-ingest.files-per-partition", DEFAULT_FILES_PER_PARTITION);
+		
 		JavaRDD<String> json_list_data = jsc.textFile(_json_list_filename,num_partitions).cache();
 		json_list_data.setName("JSON-file-list");
 		
@@ -218,8 +228,8 @@ public class ProcessForWhitelist implements Serializable
 		String input_dir  = filtered_args[0];
 		String json_list_filename = filtered_args[1];
 		
-		ProcessForWhitelist prep_for_whitelist 
-			= new ProcessForWhitelist(input_dir,json_list_filename,verbosity);
+		ProcessForWhitelistJSONFilelist prep_for_whitelist 
+			= new ProcessForWhitelistJSONFilelist(input_dir,json_list_filename,verbosity);
 		
 		//String process_ef_json_mode = System.getProperty("wcsa-ef-ingest.process-ef-json-mode","per-page");
 		prep_for_whitelist.execWordCount();
