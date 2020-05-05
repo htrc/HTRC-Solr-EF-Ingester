@@ -229,6 +229,8 @@ public class ProcessForWhitelist implements Serializable
 			System.exit(1);
 		}
 
+		String output_dir = cmd.getOptionValue("output-dir",null);
+		
 		String verbosity_str = cmd.getOptionValue("verbosity","1");
 		int verbosity = Integer.parseInt(verbosity_str);
 
@@ -236,7 +238,7 @@ public class ProcessForWhitelist implements Serializable
 		
 		String[] filtered_args = cmd.getArgs();
 
-		if (filtered_args.length != 2) {
+		if (filtered_args.length != 1) {
 			print_usage(formatter,options);
 			System.exit(1);
 		}
@@ -258,7 +260,6 @@ public class ProcessForWhitelist implements Serializable
 		}
 				
 		String input_dir  = filtered_args[0];
-		String output_dir = filtered_args[1];
 		
 		ProcessForWhitelist prep_for_whitelist 
 			= new ProcessForWhitelist(input_dir,output_dir,verbosity);
