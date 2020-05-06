@@ -133,7 +133,9 @@ class PerVolumeWordStreamFlatmap implements FlatMapFunction<Text, String>
 			}
 		}	
 
-		_progress_accum.add(_progress_step);
+		if (_progress_accum != null) {
+			_progress_accum.add(_progress_step);
+		}
 		
 		return all_word_list.iterator();
 	}
