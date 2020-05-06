@@ -82,37 +82,29 @@ public class ProcessForWhitelist implements Serializable
 			System.exit(1);
 		}
 		
-		//JavaRDD<String> json_list_data = jsc.textFile(_json_list_filename,num_partitions).cache();
-		//json_list_data.setName("JSON-file-list");
-		
 		//String packed_sequence_path = "hdfs:///user/capitanu/data/packed-ef-2.0"; 
 		String packed_sequence_path = _input_dir;
 		
 		JavaPairRDD<Text, Text> input_pair_rdd = jsc.sequenceFile(packed_sequence_path, Text.class, Text.class);
 		input_pair_rdd.setName("Sequence-file");
 		
+		/*
 		// 'withReplacement' param described here:
 		//   https://stackoverflow.com/questions/53689047/what-does-withreplacement-do-if-specified-for-sample-against-a-spark-dataframe
 		// So setting to 'false' means a chosen item is only considered once.
 		JavaPairRDD<Text, Text> input_pair_sampled_rdd = input_pair_rdd.sample(false,0.01,42); // 1%, seed-value=42
-
-		JavaRDD<Text> json_text_rdd = input_pair_sampled_rdd.map(item -> item._2).cache(); // added cache() due to call to count() below
-		// //JavaRDD<Text> json_text_rdd = input_pair_rdd.map(item -> new Text(item._2));
 		
-		// JavaRDD<Text> json_text_rdd = input_pair_rdd.map(item -> item._2).cache();
+		JavaRDD<Text> json_text_rdd = input_pair_sampled_rdd.map(item -> item._2); // .cache(); // added cache() due to call to count() below
+		 */
 		
+		JavaRDD<Text> json_text_rdd = input_pair_rdd.map(item -> item._2); // .cache();
 		
 		int num_partitions = Integer.getInteger("wcsa-ef-ingest.num-partitions", DEFAULT_NUM_PARTITIONS);
 		
-	
+		//long num_volumes = json_text_rdd.count();
+		//double per_vol = 100.0/(double)num_volumes;
 		
-		//long num_volumes = json_list_data.count();
-		long num_volumes = json_text_rdd.count();
-		double per_vol = 100.0/(double)num_volumes;
-		
-		//JavaRDD<String> json_list_data_rp = json_list_data.repartition((int)(num_volumes/100));
-
-		DoubleAccumulator per_vol_progress_accum = jsc.sc().doubleAccumulator("Per Volume Progress Percent");
+		//DoubleAccumulator per_vol_progress_accum = jsc.sc().doubleAccumulator("Per Volume Progress Percent");
 		
 		boolean icu_tokenize = Boolean.getBoolean("wcsa-ef-ingest.icu-tokenize");
 		boolean strict_file_io = Boolean.getBoolean("wcsa-ef-ingest.strict-file-io");
@@ -122,11 +114,11 @@ public class ProcessForWhitelist implements Serializable
 
 		PerVolumeWordStreamFlatmap paged_solr_wordfreq_flatmap 
 			= new PerVolumeWordStreamFlatmap(_input_dir,_verbosity, 
-								     per_vol_progress_accum,per_vol,
+								     //per_vol_progress_accum,per_vol,
+								     null, 0.0,
 								     icu_tokenize,
 								     strict_file_io);
 		
-		//JavaRDD<String> words = json_list_data.flatMap(paged_solr_wordfreq_map); 
 		JavaRDD<String> words = json_text_rdd.flatMap(paged_solr_wordfreq_flatmap); 
 		words.setName("tokenized-words");
 		
@@ -192,7 +184,7 @@ public class ProcessForWhitelist implements Serializable
 	
 	public static void print_usage(HelpFormatter formatter, Options options)
 	{
-		formatter.printHelp("RUN.sh [options] input-dir", options);
+		formatter.printHelp("_RUN.sh [options] input-dir", options);
 	}
 	
 	public static void main(String[] args) {
