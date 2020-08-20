@@ -125,6 +125,14 @@ if [ "$classmain" = "org.hathitrust.extractedfeatures.ProcessForSolrIngest" ] ||
   fi
 fi
 
+
+if [ "$classmain" = "org.hathitrust.extractedfeatures.ProcessForWhitelist" ] ; then
+  if [ "x$output_dir" != "x" ] ; then
+    cmd="$cmd --output-dir $output_dir"
+  fi
+fi
+
+    
 #
 #cmd="$cmd --verbosity 2"
 #
@@ -145,9 +153,13 @@ cat "$spark_solr_ef_propfile_in" \
 echo "****"
 echo "* Cloud node Solr endpoint operation"
 
-solr_cloud_endpoint_operation_output=`fgrep wcsa-ef-ingest.solr-cloud-nodes "$spark_solr_ef_propfile"`
+solr_cloud_endpoint_operation_output=`egrep "^wcsa-ef-ingest.solr-cloud-nodes" "$spark_solr_ef_propfile"`
 echo "=="
-echo $solr_cloud_endpoint_operation_output
+if [ "x$solr_cloud_endpoint_operation_output" = "x" ] ; then
+    echo "<empty> => this means the command-line provided --solr-base-url='$solr_base_url' will be used"
+else
+    echo $solr_cloud_endpoint_operation_output
+fi
 echo "=="
 
 
@@ -174,10 +186,16 @@ echo "****"
 if [ "$run_jps" = "1" ] ; then
   echo "* Monitor progress on Spark cluster through:"
   echo "*   http://$SPARK_MASTER_HOST:8080/"
+  echo "* Or alternatively through YARN (if SOCKETD ssh + browser network settings setup)"
+  echo "*   http://gchead:8088/cluster/apps"
   echo "****"
 fi
 echo
-sleep 2
 
+#echo "!!!!"
+#echo "! Temporarily supressing the running of the command!!!"
+#echo "!!!!"
+
+sleep 5
 $cmd
 
