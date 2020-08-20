@@ -751,6 +751,18 @@ public abstract class SolrDocJSON implements Serializable {
 		try {
 			HttpURLConnection httpcon = (HttpURLConnection) ((new URL(post_url).openConnection()));
 			httpcon.setDoOutput(true);
+
+			// Basic Realm authentication based on:
+			//   https://www.baeldung.com/java-http-url-connection
+			// Consider moving away from Aapche Commons Base64 and use Java8 one??
+			String user = "admin";
+			String password = null;
+			if (password != null) {
+			    String auth = user + ":" + password;
+			    byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.UTF_8));
+			    String authHeaderValue = "Basic " + new String(encodedAuth);
+			    httpcon.setRequestProperty("Authorization", authHeaderValue);
+			}
 			
 			httpcon.setRequestProperty("Content-Type", "application/json");
 			httpcon.setRequestProperty("Accept", "application/json");
