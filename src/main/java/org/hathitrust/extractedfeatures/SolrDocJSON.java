@@ -764,34 +764,33 @@ public abstract class SolrDocJSON implements Serializable {
 	
 	public static HttpURLConnection openConnectionWithRetries(ArrayList<String> post_url_alts)
 	{
-		HttpURLConnection httpcon = null;
+		HttpURLConnection successful_httpcon = null;
 		
 		System.err.println("****** openConnectionWithRetries() post_url_alts = " + post_url_alts);
 		
 		try { 
-			String post_url_str = post_url_alts.get(0);
-			URL post_url = new URL(post_url_str);
-			httpcon = (HttpURLConnection) (post_url.openConnection());
+			String first_post_url_str = post_url_alts.get(0);
+			URL first_post_url = new URL(first_post_url_str);
+			HttpURLConnection first_httpcon = (HttpURLConnection) (first_post_url.openConnection());
 
-			int response_code = httpcon.getResponseCode();
-			if (response_code == HttpURLConnection.HTTP_UNAVAILABLE) {
-				httpcon.disconnect();
-				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
-
-				String prev_post_url_str = post_url_str;
+			int first_response_code = first_httpcon.getResponseCode();
+			if (first_response_code == HttpURLConnection.HTTP_UNAVAILABLE) {
+				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+first_response_code+") connecting to "+first_post_url_str);
+				first_httpcon.disconnect();
+				
+				String prev_post_url_str = first_post_url_str;
 				post_url_alts.remove(0);
 				
 				boolean retry_successful = false;
 
 				while (post_url_alts.size()>0) {
-					System.out.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
-
-					post_url_str = post_url_alts.get(0);
-					post_url = new URL(post_url_str);
+				
+					String alt_post_url_str = post_url_alts.get(0);
+					URL alt_post_url = new URL(alt_post_url_str);
 
 					long random_msec = (long) (2000 + (2000 * Math.random())); // 2-4 secs delay
 					String mess = "         Sleeping for "+random_msec+" msecs, then trying again";
-					if (!post_url_str.equals(prev_post_url_str)) {
+					if (!alt_post_url_str.equals(prev_post_url_str)) {
 						mess += " (with different Solr endpoint)";
 					}
 					System.out.println(mess);
@@ -803,15 +802,19 @@ public abstract class SolrDocJSON implements Serializable {
 						e.printStackTrace();
 						break;
 					}
-					httpcon = (HttpURLConnection)(post_url.openConnection());
-
-					response_code = httpcon.getResponseCode();
-					if (response_code == HttpURLConnection.HTTP_OK) {
+					HttpURLConnection alt_httpcon = (HttpURLConnection)(alt_post_url.openConnection());
+					
+					int alt_response_code = alt_httpcon.getResponseCode();
+					if (alt_response_code == HttpURLConnection.HTTP_OK) {
+						successful_httpcon = alt_httpcon;
 						retry_successful = true;
 						break;
 					}
 
-					prev_post_url_str = post_url_str;
+					System.out.println("Warning: HTTP_UNAVAILABLE (response code: "+alt_response_code+") connecting to "+alt_post_url_str);
+					alt_httpcon.disconnect();
+					
+					prev_post_url_str = alt_post_url_str;
 					post_url_alts.remove(0);
 				}
 
@@ -822,6 +825,9 @@ public abstract class SolrDocJSON implements Serializable {
 					System.err.println("**** Retry NOT successful!");
 				}
 			}
+			else {
+				successful_httpcon = first_httpcon;
+			}
 		}
 		catch (MalformedURLException e) {
 			e.printStackTrace();
@@ -830,7 +836,7 @@ public abstract class SolrDocJSON implements Serializable {
 			e.printStackTrace();
 		}
 		
-		return httpcon;
+		return successful_httpcon;
 	}
 	
 	public static void postSolrDoc(ArrayList<String> post_url_alts, String solr_add_doc_json_str,
@@ -850,12 +856,14 @@ public abstract class SolrDocJSON implements Serializable {
 		//   https://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
 		
 		try {
+			
 			//String post_url_str = post_url_alts.remove(0);
 			//URL post_url = new URL(post_url_str);
 			//HttpURLConnection httpcon = (HttpURLConnection) (post_url.openConnection());
 			
 			HttpURLConnection httpcon = openConnectionWithRetries(post_url_alts);
 			
+			httpcon.setDoInput(true);	
 			httpcon.setDoOutput(true);				
 			
 			// Basic Realm authentication based on:
@@ -863,6 +871,7 @@ public abstract class SolrDocJSON implements Serializable {
 			// Consider moving away from Aapche Commons Base64 and use Java8 one??
 			String user = "admin";
 			String password = null;
+			
 			if (password != null) {
 			    String auth = user + ":" + password;
 			    byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.UTF_8));
@@ -890,7 +899,8 @@ public abstract class SolrDocJSON implements Serializable {
 				sb.append(decodedString);
 			}
 			in.close();
-
+			httpcon.disconnect();
+			
 			JSONObject solr_status_json = new JSONObject(sb.toString());
 			
 			if (!solr_status_json.isNull("responseHeader")) {
