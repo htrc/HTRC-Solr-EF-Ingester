@@ -19,9 +19,7 @@ import org.json.JSONObject;
 public class PerVolumeUtil implements Serializable
 {
 	private static final long serialVersionUID = 1L;
-	
-	public final static int NUM_ALT_RETRIES = 10;
-	
+		
 	protected String _input_dir;
 	protected String _whitelist_filename;
 	protected String _langmap_directory;
@@ -41,23 +39,6 @@ public class PerVolumeUtil implements Serializable
 	boolean _icu_tokenize;
 	boolean _strict_file_io;
 
-	public static ArrayList<String > generateRandomRetrySolrEnpoints(ArrayList<String> solr_endpoints, int num_retries)
-	{
-		ArrayList<String> solr_url_alts = null;
-		
-		int solr_endpoints_len = solr_endpoints.size();
-		if (solr_endpoints_len > 0) {
-			solr_url_alts = new ArrayList<String>();
-			for (int i=0; i<num_retries; i++) {
-				int random_choice = (int)(solr_endpoints_len * Math.random());
-				String solr_url = solr_endpoints.get(random_choice);
-				solr_url_alts.add(solr_url);
-			}
-		}
-		
-		System.err.println("**** randomRetrySolrEndpoints returning: " + solr_url_alts);
-		return solr_url_alts;
-	}
 	public PerVolumeUtil(String input_dir, String whitelist_filename, String langmap_directory,
 				         ArrayList<String> solr_endpoints, String output_dir, int verbosity, 
 					     boolean icu_tokenize, boolean strict_file_io)
@@ -114,7 +95,7 @@ public class PerVolumeUtil implements Serializable
 
 		int ef_num_pages = 0;
 
-		ArrayList<String> solr_url_alts = generateRandomRetrySolrEnpoints(_solr_endpoints,NUM_ALT_RETRIES);
+		ArrayList<String> solr_url_alts = SolrDocJSON.generateRandomRetrySolrEnpoints(_solr_endpoints);
 		/*
 		ArrayList<String> solr_url_alts = null;
 		if (_solr_endpoints_len > 0) {
@@ -245,7 +226,7 @@ public class PerVolumeUtil implements Serializable
 		
 	public Integer callAddConceptsPageLevel(JSONObject page_rec)
 	{
-		ArrayList<String> solr_url_alts = generateRandomRetrySolrEnpoints(_solr_endpoints,NUM_ALT_RETRIES);
+		ArrayList<String> solr_url_alts = SolrDocJSON.generateRandomRetrySolrEnpoints(_solr_endpoints);
 		/*
 		String solr_url = null;
 		if (_solr_endpoints_len > 0) {
@@ -312,7 +293,7 @@ public class PerVolumeUtil implements Serializable
 	
 		int num_processed = 1;
 		
-		ArrayList<String> solr_url_alts = generateRandomRetrySolrEnpoints(_solr_endpoints,NUM_ALT_RETRIES);
+		ArrayList<String> solr_url_alts = SolrDocJSON.generateRandomRetrySolrEnpoints(_solr_endpoints);
 		/*
 		String solr_url = null;
 		if (_solr_endpoints_len > 0) {

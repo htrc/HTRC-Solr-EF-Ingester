@@ -35,7 +35,7 @@ public class PerPageConceptsJSON implements Function<String,Integer>
 	
 	public Integer callAddConceptsPageLevel(JSONObject page_rec)
 	{
-		ArrayList<String> solr_url_alts = PerVolumeUtil.generateRandomRetrySolrEnpoints(_solr_endpoints,PerVolumeUtil.NUM_ALT_RETRIES);
+		ArrayList<String> solr_url_alts = SolrDocJSON.generateRandomRetrySolrEnpoints(_solr_endpoints);
 		/*
 		String solr_url = null;
 		if (_solr_endpoints_len > 0) {

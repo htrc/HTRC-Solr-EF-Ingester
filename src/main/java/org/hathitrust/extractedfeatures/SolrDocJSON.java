@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 //import java.util.Base64;
@@ -35,6 +36,8 @@ import org.apache.lucene.analysis.core.LowerCaseFilter;
 
 public abstract class SolrDocJSON implements Serializable {
 
+	public final static int NUM_ALT_RETRIES = 10;
+	
 	protected String [] metadata_single_string = null;
 	protected String [] metadata_multiple = null;
 
@@ -736,6 +739,98 @@ public abstract class SolrDocJSON implements Serializable {
 		}
 	}
 	
+	public static ArrayList<String > generateRandomRetrySolrEnpoints(ArrayList<String> solr_endpoints, int num_retries)
+	{
+		ArrayList<String> solr_url_alts = null;
+		
+		int solr_endpoints_len = solr_endpoints.size();
+		if (solr_endpoints_len > 0) {
+			solr_url_alts = new ArrayList<String>();
+			for (int i=0; i<num_retries; i++) {
+				int random_choice = (int)(solr_endpoints_len * Math.random());
+				String solr_url = solr_endpoints.get(random_choice);
+				solr_url_alts.add(solr_url);
+			}
+		}
+		
+		System.err.println("**** generateRandomRetrySolrEnpoints() returning: " + solr_url_alts);
+		return solr_url_alts;
+	}
+	
+	public static ArrayList<String > generateRandomRetrySolrEnpoints(ArrayList<String> solr_endpoints)
+	{
+		return generateRandomRetrySolrEnpoints(solr_endpoints,NUM_ALT_RETRIES);
+	}
+	
+	public static HttpURLConnection openConnectionWithRetries(ArrayList<String> post_url_alts)
+	{
+		HttpURLConnection httpcon = null;
+		
+		System.err.println("****** openConnectionWithRetries() post_url_alts = " + post_url_alts);
+		
+		try { 
+			String post_url_str = post_url_alts.remove(0);
+			URL post_url = new URL(post_url_str);
+			httpcon = (HttpURLConnection) (post_url.openConnection());
+
+			int response_code = httpcon.getResponseCode();
+			if (response_code == HttpURLConnection.HTTP_UNAVAILABLE) {
+				httpcon.disconnect();
+				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
+
+				String prev_post_url_str = post_url_str;
+
+				boolean retry_successful = false;
+
+				while (post_url_alts.size()>0) {
+					System.out.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
+
+					post_url_str = post_url_alts.remove(0);
+					post_url = new URL(post_url_str);
+
+					long random_msec = (long) (2000 + (2000 * Math.random())); // 2-4 secs delay
+					String mess = "         Sleeping for "+random_msec+" msecs, then trying again";
+					if (!post_url_str.equals(prev_post_url_str)) {
+						mess += " (with different Solr endpoint)";
+					}
+					System.out.println(mess);
+
+					try {
+						Thread.sleep(random_msec);
+					}
+					catch (InterruptedException e) {
+						e.printStackTrace();
+						break;
+					}
+					httpcon = (HttpURLConnection)(post_url.openConnection());
+
+					response_code = httpcon.getResponseCode();
+					if (response_code == HttpURLConnection.HTTP_OK) {
+						retry_successful = true;
+						break;
+					}
+
+					prev_post_url_str = post_url_str;
+				}
+
+				if (retry_successful) {
+					System.err.println("Retry successful");
+				}
+				else {
+					System.err.println("**** Retry NOT successful!");
+				}
+			}
+		}
+		catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return httpcon;
+	}
+	
 	public static void postSolrDoc(ArrayList<String> post_url_alts, String solr_add_doc_json_str,
 				       				   String info_volume_id, String info_page_id)
 	{
@@ -753,51 +848,11 @@ public abstract class SolrDocJSON implements Serializable {
 		//   https://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
 		
 		try {
-			String post_url_str = post_url_alts.remove(0);
-			URL post_url = new URL(post_url_str);
-			HttpURLConnection httpcon = (HttpURLConnection) (post_url.openConnection());
+			//String post_url_str = post_url_alts.remove(0);
+			//URL post_url = new URL(post_url_str);
+			//HttpURLConnection httpcon = (HttpURLConnection) (post_url.openConnection());
 			
-			int response_code = httpcon.getResponseCode();
-			if (response_code == HttpURLConnection.HTTP_UNAVAILABLE) {
-				httpcon.disconnect();
-				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
-				
-				String prev_post_url_str = post_url_str;
-				
-				boolean retry_successful = false;
-				
-				while (post_url_alts.size()>0) {
-					System.out.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
-
-					post_url_str = post_url_alts.remove(0);
-					post_url = new URL(post_url_str);
-
-					long random_msec = (long) (2000 + (2000 * Math.random())); // 2-4 secs delay
-					String mess = "         Sleeping for "+random_msec+" msecs, then trying again";
-					if (!post_url_str.equals(prev_post_url_str)) {
-						mess += " (with different Solr endpoint)";
-					}
-					System.out.println(mess);
-					Thread.sleep(random_msec);
-					
-					httpcon = (HttpURLConnection)(post_url.openConnection());
-					
-					response_code = httpcon.getResponseCode();
-					if (response_code == HttpURLConnection.HTTP_OK) {
-						retry_successful = true;
-						break;
-					}
-					
-					prev_post_url_str = post_url_str;
-				}
-				
-				if (retry_successful) {
-					System.err.println("Retry successful");
-				}
-				else {
-					System.err.println("**** Retry NOT successful!");
-				}
-			}
+			HttpURLConnection httpcon = openConnectionWithRetries(post_url_alts);
 			
 			httpcon.setDoOutput(true);				
 			
