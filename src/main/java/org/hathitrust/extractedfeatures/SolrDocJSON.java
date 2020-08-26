@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 //import java.util.Base64;
@@ -762,7 +763,41 @@ public abstract class SolrDocJSON implements Serializable {
 		return generateRandomRetrySolrEnpoints(solr_endpoints,NUM_ALT_RETRIES);
 	}
 	
-	public static HttpURLConnection openConnectionWithRetries(ArrayList<String> post_url_alts)
+	public static void prepareHttpConnectionHeader(HttpURLConnection httpcon)
+	{
+		httpcon.setDoInput(true);	
+		httpcon.setDoOutput(true);				
+
+		// Basic Realm authentication based on:
+		//   https://www.baeldung.com/java-http-url-connection
+		// Consider moving away from Apache Commons Base64 and use Java8 one??
+		String user = "admin";
+		String password = null;
+
+		if (password != null) {
+			String auth = user + ":" + password;
+			byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.UTF_8));
+			String authHeaderValue = "Basic " + new String(encodedAuth);
+			httpcon.setRequestProperty("Authorization", authHeaderValue);
+		}
+
+		httpcon.setRequestProperty("Content-Type", "application/json");
+		httpcon.setRequestProperty("Accept", "application/json");
+		try {
+			httpcon.setRequestMethod("POST");
+		} catch (ProtocolException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			httpcon.connect();
+		} catch (IOException e) {
+			System.err.println("Warning: "+e.getMessage());
+		}
+			
+	}
+	
+	public static HttpURLConnection openHttpConnectionWithRetries(ArrayList<String> post_url_alts)
 	{
 		HttpURLConnection successful_httpcon = null;
 		
@@ -772,7 +807,8 @@ public abstract class SolrDocJSON implements Serializable {
 			String first_post_url_str = post_url_alts.get(0);
 			URL first_post_url = new URL(first_post_url_str);
 			HttpURLConnection first_httpcon = (HttpURLConnection) (first_post_url.openConnection());
-
+			prepareHttpConnectionHeader(first_httpcon);
+			
 			int first_response_code = first_httpcon.getResponseCode();
 			if (first_response_code == HttpURLConnection.HTTP_UNAVAILABLE) {
 				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+first_response_code+") connecting to "+first_post_url_str);
@@ -803,6 +839,7 @@ public abstract class SolrDocJSON implements Serializable {
 						break;
 					}
 					HttpURLConnection alt_httpcon = (HttpURLConnection)(alt_post_url.openConnection());
+					prepareHttpConnectionHeader(first_httpcon);
 					
 					int alt_response_code = alt_httpcon.getResponseCode();
 					if (alt_response_code == HttpURLConnection.HTTP_OK) {
@@ -855,34 +892,10 @@ public abstract class SolrDocJSON implements Serializable {
 		// similar lines to:
 		//   https://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
 		
-		try {
+		try {		
+			HttpURLConnection httpcon = openHttpConnectionWithRetries(post_url_alts);
 			
-			//String post_url_str = post_url_alts.remove(0);
-			//URL post_url = new URL(post_url_str);
-			//HttpURLConnection httpcon = (HttpURLConnection) (post_url.openConnection());
-			
-			HttpURLConnection httpcon = openConnectionWithRetries(post_url_alts);
-			
-			//httpcon.setDoInput(true);	
-			//httpcon.setDoOutput(true);				
-			
-			// Basic Realm authentication based on:
-			//   https://www.baeldung.com/java-http-url-connection
-			// Consider moving away from Aapche Commons Base64 and use Java8 one??
-			String user = "admin";
-			String password = null;
-			
-			if (password != null) {
-			    String auth = user + ":" + password;
-			    byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.UTF_8));
-			    String authHeaderValue = "Basic " + new String(encodedAuth);
-			    httpcon.setRequestProperty("Authorization", authHeaderValue);
-			}
-			
-			httpcon.setRequestProperty("Content-Type", "application/json");
-			httpcon.setRequestProperty("Accept", "application/json");
-			httpcon.setRequestMethod("POST");
-			httpcon.connect();
+			// httpcon.connect();
 
 			byte[] outputBytes = solr_add_doc_json_str.getBytes("UTF-8");
 			OutputStream os = httpcon.getOutputStream();
