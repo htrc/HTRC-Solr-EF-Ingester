@@ -863,8 +863,8 @@ public abstract class SolrDocJSON implements Serializable {
 			
 			HttpURLConnection httpcon = openConnectionWithRetries(post_url_alts);
 			
-			httpcon.setDoInput(true);	
-			httpcon.setDoOutput(true);				
+			//httpcon.setDoInput(true);	
+			//httpcon.setDoOutput(true);				
 			
 			// Basic Realm authentication based on:
 			//   https://www.baeldung.com/java-http-url-connection
