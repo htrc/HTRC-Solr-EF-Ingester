@@ -46,6 +46,7 @@ ADV	ADV
 # auxiliary
 AUX	X
 CCONJ	CONJ
+CONJ	CONJ
 DET	DET
 # interjection
 INTJ	X

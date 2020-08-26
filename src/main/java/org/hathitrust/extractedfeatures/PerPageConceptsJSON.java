@@ -46,7 +46,8 @@ public class PerPageConceptsJSON implements Function<String,Integer>
 		
 		String volume_id = page_rec.getString("documentId");
 		String collection_name = page_rec.getString("collectionName");
-		if (!volume_id.equals(collection_name)) {
+		//if (!volume_id.equals(collection_name)) {
+		if (collection_name.endsWith(":")) { // sign of old bug in concept JSON data where full HT ID is split across vol and col fields
 			volume_id = collection_name+"/"+volume_id;
 		}
 		String page_id_filename = page_rec.getString("pageId");

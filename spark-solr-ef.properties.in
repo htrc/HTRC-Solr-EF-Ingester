@@ -27,8 +27,23 @@ wcsa-ef-ingest.langmap-directory = file:@htrc-solr-ef-ingester-home@/stanfordnlp
 #wcsa-ef-ingest.solr-cloud-nodes = solr1-s:8983,solr1-s:8984,solr1-s:8985,solr1-s:8986,solr1-s:8987,solr2-s:8983,solr2-s:8984,solr2-s:8985,solr2-s:8986,solr2-s:8987
 
 # SOLR12 Solr8 
-wcsa-ef-ingest.solr-cloud-nodes = solr1-s:9983,solr1-s:9984,solr1-s:9985,solr1-s:9986,solr1-s:9987,solr1-s:9988,solr1-s:9989,solr1-s:9990,solr1-s:9991,solr1-s:9992,solr2-s:9983,solr2-s:9984,solr2-s:9985,solr2-s:9986,solr2-s:9987,solr2-s:9988,solr2-s:9989,solr2-s:9990,solr2-s:9991,solr2-s:9992
+#wcsa-ef-ingest.solr-cloud-nodes = solr1-s:9983,solr1-s:9984,solr1-s:9985,solr1-s:9986,solr1-s:9987,solr1-s:9988,solr1-s:9989,solr1-s:9990,solr1-s:9991,solr1-s:9992,solr2-s:9983,solr2-s:9984,solr2-s:9985,solr2-s:9986,solr2-s:9987,solr2-s:9988,solr2-s:9989,solr2-s:9990,solr2-s:9991,solr2-s:9992
 
+# SOLR345678 Solr8
+#   At time of writing (21 Aug 2020), /etc/hosts all messed up with missing,
+#   and in some cases wrong IP numbers
+# => do this with IP numbers directly
+#
+# solr3=192.168.64.66
+# solr4=192.168.64.67
+# solr5=192.168.64.68
+# solr6=192.17.61.46  # This machine (unlike solr3-5)  doesn't appear to have a second network card in it
+# solr7=192.17.61.57 # faux name, actually queenpalm
+# solr8=192.17.61.55 # faux name, actually royalpalm
+
+#wcsa-ef-ingest.solr-cloud-nodes = 192.168.64.66:9983,192.168.64.66:9984,192.168.64.66:9985,192.168.64.66:9986,192.168.64.66:9987,192.168.64.66:9988,192.168.64.66:9989,192.168.64.66:9990,192.168.64.67:9983,192.168.64.67:9984,192.168.64.67:9985,192.168.64.67:9986,192.168.64.67:9987,192.168.64.67:9988,192.168.64.67:9989,192.168.64.67:9990,192.168.64.68:9983,192.168.64.68:9984,192.168.64.68:9985,192.168.64.68:9986,192.168.64.68:9987,192.168.64.68:9988,192.168.64.68:9989,192.168.64.68:9990,192.17.61.46:9983,192.17.61.46:9984,192.17.61.46:9985,192.17.61.46:9986,192.17.61.46:9987,192.17.61.46:9988,192.17.61.46:9989,192.17.61.46:9990,192.17.61.57:9983,192.17.61.57:9984,192.17.61.57:9985,192.17.61.57:9986,192.17.61.57:9987,192.17.61.57:9988,192.17.61.57:9989,192.17.61.57:9990,192.17.61.55:9983,192.17.61.55:9984,192.17.61.55:9985,192.17.61.55:9986,192.17.61.55:9987,192.17.61.55:9988,192.17.61.55:9989,192.17.61.55:9990
+
+wcsa-ef-ingest.solr-cloud-nodes = solr3-s:9983,solr3-s:9985,solr3-s:9987,solr3-s:9989,solr4-s:9983,solr4-s:9985,solr4-s:9987,solr4-s:9989,solr5-s:9983,solr5-s:9985,solr5-s:9987,solr5-s:9989,192.17.61.46:9983,192.17.61.46:9985,192.17.61.46:9987,192.17.61.46:9989,192.17.61.57:9983,192.17.61.57:9985,192.17.61.57:9987,192.17.61.57:9989,192.17.61.55:9983,192.17.61.55:9985,192.17.61.55:9987,192.17.61.55:9989
 
 wcsa-ef-ingest.icu-tokenize = true
 wcsa-ef-ingest.strict-file-io = false
