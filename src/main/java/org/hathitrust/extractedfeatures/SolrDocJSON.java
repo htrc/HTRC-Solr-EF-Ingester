@@ -871,7 +871,7 @@ public abstract class SolrDocJSON implements Serializable {
 			// Consider moving away from Aapche Commons Base64 and use Java8 one??
 			String user = "admin";
 			String password = null;
-			
+
 			if (password != null) {
 			    String auth = user + ":" + password;
 			    byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.UTF_8));
