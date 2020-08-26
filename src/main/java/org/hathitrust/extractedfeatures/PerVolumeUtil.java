@@ -55,6 +55,7 @@ public class PerVolumeUtil implements Serializable
 			}
 		}
 		
+		System.err.println("**** randomRetrySolrEndpoints returning: " + solr_url_alts);
 		return solr_url_alts;
 	}
 	public PerVolumeUtil(String input_dir, String whitelist_filename, String langmap_directory,
