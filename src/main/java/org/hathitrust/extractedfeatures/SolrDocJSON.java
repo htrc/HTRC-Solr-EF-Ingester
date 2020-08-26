@@ -748,6 +748,10 @@ public abstract class SolrDocJSON implements Serializable {
 
 	        // System.out.println("Post URL: " + post_url);
 		
+		// Consider breaking into version with support method to create connection, along
+		// similar lines to:
+		//   https://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
+		
 		try {
 			String post_url_str = post_url_alts.remove(0);
 			URL post_url = new URL(post_url_str);
@@ -755,7 +759,7 @@ public abstract class SolrDocJSON implements Serializable {
 			
 			int response_code = httpcon.getResponseCode();
 			if (response_code == HttpURLConnection.HTTP_UNAVAILABLE) {
-				
+				httpcon.disconnect();
 				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
 				
 				String prev_post_url_str = post_url_str;
