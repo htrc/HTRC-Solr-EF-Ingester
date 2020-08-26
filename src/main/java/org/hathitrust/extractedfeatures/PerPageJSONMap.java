@@ -51,19 +51,21 @@ class PerPageJSONMap implements Function<JSONObject, String>
 			System.out.println("==================");
 		}
 		
+		ArrayList<String> solr_url_alts = PerVolumeUtil.generateRandomRetrySolrEnpoints(_solr_endpoints,PerVolumeUtil.NUM_ALT_RETRIES);
+		/*
 		String solr_url = null;
 		if (_solr_endpoints_len > 0) {
 			int random_choice = (int)(_solr_endpoints_len * Math.random());
 			solr_url = _solr_endpoints.get(random_choice);
-		}
+		}*/
 				
-		if (solr_url != null) {
+		if (solr_url_alts != null) {
 			if ((_verbosity >=2) && (random_test)) {
 				System.out.println("==================");
-				System.out.println("Posting to: " + solr_url);
+				System.out.println("Posting to: " + solr_url_alts.get(0));
 				System.out.println("==================");
 			}
-			SolrDocJSON.postSolrDoc(solr_url, solr_add_doc_json,output_json_bz2,""); // Compromise over debug output
+			SolrDocJSON.postSolrDoc(solr_url_alts, solr_add_doc_json,output_json_bz2,""); // Compromise over debug output
 		}
 
 		if (_output_dir != null) {

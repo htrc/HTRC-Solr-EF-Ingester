@@ -19,7 +19,9 @@ import org.json.JSONObject;
 public class PerVolumeUtil implements Serializable
 {
 	private static final long serialVersionUID = 1L;
-
+	
+	public final static int NUM_ALT_RETRIES = 10;
+	
 	protected String _input_dir;
 	protected String _whitelist_filename;
 	protected String _langmap_directory;
@@ -39,6 +41,22 @@ public class PerVolumeUtil implements Serializable
 	boolean _icu_tokenize;
 	boolean _strict_file_io;
 
+	public static ArrayList<String > generateRandomRetrySolrEnpoints(ArrayList<String> solr_endpoints, int num_retries)
+	{
+		ArrayList<String> solr_url_alts = null;
+		
+		int solr_endpoints_len = solr_endpoints.size();
+		if (solr_endpoints_len > 0) {
+			solr_url_alts = new ArrayList<String>();
+			for (int i=0; i<num_retries; i++) {
+				int random_choice = (int)(solr_endpoints_len * Math.random());
+				String solr_url = solr_endpoints.get(random_choice);
+				solr_url_alts.add(solr_url);
+			}
+		}
+		
+		return solr_url_alts;
+	}
 	public PerVolumeUtil(String input_dir, String whitelist_filename, String langmap_directory,
 				         ArrayList<String> solr_endpoints, String output_dir, int verbosity, 
 					     boolean icu_tokenize, boolean strict_file_io)
@@ -95,11 +113,17 @@ public class PerVolumeUtil implements Serializable
 
 		int ef_num_pages = 0;
 
-		String solr_url = null;
+		ArrayList<String> solr_url_alts = generateRandomRetrySolrEnpoints(_solr_endpoints,NUM_ALT_RETRIES);
+		/*
+		ArrayList<String> solr_url_alts = null;
 		if (_solr_endpoints_len > 0) {
-			int random_choice = (int)(_solr_endpoints_len * Math.random());
-			solr_url = _solr_endpoints.get(random_choice);
-		}
+			solr_url_alts = new ArrayList<String>();
+			for (int i=0; i<NUM_ALT_RETRIES; i++) {
+				int random_choice = (int)(_solr_endpoints_len * Math.random());
+				String solr_url = _solr_endpoints.get(random_choice);
+				solr_url_alts.add(solr_url);
+			}
+		}*/
 		
 		try {
 
@@ -129,14 +153,14 @@ public class PerVolumeUtil implements Serializable
 						System.out.println("==================");
 					}
 
-					if (solr_url != null) {
+					if (solr_url_alts != null) {
 
 						if ((_verbosity >=2) ) {
 							System.out.println("==================");
-							System.out.println("Posting to: " + solr_url);
+							System.out.println("Posting to: " + solr_url_alts.get(0));
 							System.out.println("==================");
 						}
-						SolrDocJSON.postSolrDoc(solr_url, solr_add_metadata_doc_json, volume_id, "top-level-metadata");
+						SolrDocJSON.postSolrDoc(solr_url_alts, solr_add_metadata_doc_json, volume_id, "top-level-metadata");
 					}
 				}
 				
@@ -189,8 +213,8 @@ public class PerVolumeUtil implements Serializable
 							}
 
 
-							if ((solr_url != null) && (solr_add_doc_json != null)) {
-								SolrDocJSON.postSolrDoc(solr_url, solr_add_doc_json, volume_id, page_id);
+							if ((solr_url_alts != null) && (solr_add_doc_json != null)) {
+								SolrDocJSON.postSolrDoc(solr_url_alts, solr_add_doc_json, volume_id, page_id);
 							}
 						}
 						else {
@@ -220,11 +244,13 @@ public class PerVolumeUtil implements Serializable
 		
 	public Integer callAddConceptsPageLevel(JSONObject page_rec)
 	{
+		ArrayList<String> solr_url_alts = generateRandomRetrySolrEnpoints(_solr_endpoints,NUM_ALT_RETRIES);
+		/*
 		String solr_url = null;
 		if (_solr_endpoints_len > 0) {
 			int random_choice = (int)(_solr_endpoints_len * Math.random());
 			solr_url = _solr_endpoints.get(random_choice);
-		}
+		}*/
 		
 		String volume_id = page_rec.getString("documentId");
 		String collection_name = page_rec.getString("collectionName");
@@ -255,14 +281,14 @@ public class PerVolumeUtil implements Serializable
 				System.out.println("==================");
 			}
 
-			if (solr_url != null) {
+			if (solr_url_alts != null) {
 
 				if ((_verbosity >=2) ) {
 					System.out.println("==================");
-					System.out.println("Posting to: " + solr_url);
+					System.out.println("Posting to: " + solr_url_alts.get(0));
 					System.out.println("==================");
 				}
-				SolrDocJSON.postSolrDoc(solr_url, solr_update_concept_metadata_doc_json, volume_id, page_id);
+				SolrDocJSON.postSolrDoc(solr_url_alts, solr_update_concept_metadata_doc_json, volume_id, page_id);
 				
 				// Send explicit commitWithin
 				//JSONObject solr_commitwithin_json = SolrDocJSON.explicitCommitWithin();
@@ -285,11 +311,13 @@ public class PerVolumeUtil implements Serializable
 	
 		int num_processed = 1;
 		
+		ArrayList<String> solr_url_alts = generateRandomRetrySolrEnpoints(_solr_endpoints,NUM_ALT_RETRIES);
+		/*
 		String solr_url = null;
 		if (_solr_endpoints_len > 0) {
 			int random_choice = (int)(_solr_endpoints_len * Math.random());
 			solr_url = _solr_endpoints.get(random_choice);
-		}
+		}*/
 		
 		String volume_id = vol_rec.getString("volId");
 		
@@ -318,14 +346,14 @@ public class PerVolumeUtil implements Serializable
 					System.out.println("==================");
 				}
 
-				if (solr_url != null) {
+				if (solr_url_alts != null) {
 
 					if ((_verbosity >=2) ) {
 						System.out.println("==================");
-						System.out.println("Posting to: " + solr_url);
+						System.out.println("Posting to: " + solr_url_alts.get(0));
 						System.out.println("==================");
 					}
-					SolrDocJSON.postSolrDoc(solr_url, solr_update_cmds_concept_metadata_doc_json, volume_id, "top-level-metadata");
+					SolrDocJSON.postSolrDoc(solr_url_alts, solr_update_cmds_concept_metadata_doc_json, volume_id, "top-level-metadata");
 				}
 			}
 			else {

@@ -736,7 +736,7 @@ public abstract class SolrDocJSON implements Serializable {
 		}
 	}
 	
-	public static void postSolrDoc(String post_url, String solr_add_doc_json_str,
+	public static void postSolrDoc(ArrayList<String> post_url_alts, String solr_add_doc_json_str,
 				       				   String info_volume_id, String info_page_id)
 	{
 		
@@ -749,9 +749,54 @@ public abstract class SolrDocJSON implements Serializable {
 	        // System.out.println("Post URL: " + post_url);
 		
 		try {
-			HttpURLConnection httpcon = (HttpURLConnection) ((new URL(post_url).openConnection()));
-			httpcon.setDoOutput(true);
+			String post_url_str = post_url_alts.remove(0);
+			URL post_url = new URL(post_url_str);
+			HttpURLConnection httpcon = (HttpURLConnection) (post_url.openConnection());
+			
+			int response_code = httpcon.getResponseCode();
+			if (response_code == HttpURLConnection.HTTP_UNAVAILABLE) {
+				
+				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
+				
+				String prev_post_url_str = post_url_str;
+				
+				boolean retry_successful = false;
+				
+				while (post_url_alts.size()>0) {
+					System.out.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
 
+					post_url_str = post_url_alts.remove(0);
+					post_url = new URL(post_url_str);
+
+					long random_msec = (long) (2000 + (2000 * Math.random())); // 2-4 secs delay
+					String mess = "         Sleeping for "+random_msec+" msecs, then trying again";
+					if (!post_url_str.equals(prev_post_url_str)) {
+						mess += " (with different Solr endpoint)";
+					}
+					System.out.println(mess);
+					Thread.sleep(random_msec);
+					
+					httpcon = (HttpURLConnection)(post_url.openConnection());
+					
+					response_code = httpcon.getResponseCode();
+					if (response_code == HttpURLConnection.HTTP_OK) {
+						retry_successful = true;
+						break;
+					}
+					
+					prev_post_url_str = post_url_str;
+				}
+				
+				if (retry_successful) {
+					System.err.println("Retry successful");
+				}
+				else {
+					System.err.println("**** Retry NOT successful!");
+				}
+			}
+			
+			httpcon.setDoOutput(true);				
+			
 			// Basic Realm authentication based on:
 			//   https://www.baeldung.com/java-http-url-connection
 			// Consider moving away from Aapche Commons Base64 and use Java8 one??
@@ -804,7 +849,7 @@ public abstract class SolrDocJSON implements Serializable {
 			
 		}
 		catch (IOException e) {
-		        System.err.println("Solr core update failed when processing id: " + info_volume_id + "." + info_page_id);
+		        System.err.println("Solr core update failed when processing id: " + info_page_id);
 		        System.err.println("Solr Doc posted for ingest was:\n" + solr_add_doc_json_str);
 		        
 		        e.printStackTrace();
@@ -815,16 +860,16 @@ public abstract class SolrDocJSON implements Serializable {
 		}
 	}
 
-	public static void postSolrDoc(String post_url, JSONObject solr_add_doc_json,
+	public static void postSolrDoc(ArrayList<String> post_url_alts, JSONObject solr_add_doc_json,
 			String info_volume_id, String info_page_id)
 	{
-		postSolrDoc(post_url,solr_add_doc_json.toString(),info_volume_id,info_page_id);
+		postSolrDoc(post_url_alts,solr_add_doc_json.toString(),info_volume_id,info_page_id);
 	}
 
-	public static void postSolrDoc(String post_url, JSONArray solr_add_doc_json_array,
+	public static void postSolrDoc(ArrayList<String> post_url_alts, JSONArray solr_add_doc_json_array,
 			String info_volume_id, String info_page_id)
 	{
-		postSolrDoc(post_url,solr_add_doc_json_array.toString(),info_volume_id,info_page_id);
+		postSolrDoc(post_url_alts,solr_add_doc_json_array.toString(),info_volume_id,info_page_id);
 	}
 
 }

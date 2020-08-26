@@ -35,11 +35,14 @@ public class PerPageConceptsJSON implements Function<String,Integer>
 	
 	public Integer callAddConceptsPageLevel(JSONObject page_rec)
 	{
+		ArrayList<String> solr_url_alts = PerVolumeUtil.generateRandomRetrySolrEnpoints(_solr_endpoints,PerVolumeUtil.NUM_ALT_RETRIES);
+		/*
 		String solr_url = null;
 		if (_solr_endpoints_len > 0) {
 			int random_choice = (int)(_solr_endpoints_len * Math.random());
 			solr_url = _solr_endpoints.get(random_choice);
 		}
+		*/
 		
 		String volume_id = page_rec.getString("documentId");
 		String collection_name = page_rec.getString("collectionName");
@@ -68,14 +71,14 @@ public class PerPageConceptsJSON implements Function<String,Integer>
 				System.out.println("==================");
 			}
 
-			if (solr_url != null) {
+			if (solr_url_alts != null) {
 
 				if ((_verbosity >=2) ) {
 					System.out.println("==================");
-					System.out.println("Posting to: " + solr_url);
+					System.out.println("Posting to: " + solr_url_alts.get(0));
 					System.out.println("==================");
 				}
-				SolrDocJSON.postSolrDoc(solr_url, solr_update_concept_metadata_doc_json, volume_id, page_id);
+				SolrDocJSON.postSolrDoc(solr_url_alts, solr_update_concept_metadata_doc_json, volume_id, page_id);
 				
 				// Send explicit commitWithin
 				//JSONObject solr_commitwithin_json = SolrDocJSON.explicitCommitWithin();
