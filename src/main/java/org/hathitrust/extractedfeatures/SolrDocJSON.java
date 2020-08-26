@@ -769,7 +769,7 @@ public abstract class SolrDocJSON implements Serializable {
 		System.err.println("****** openConnectionWithRetries() post_url_alts = " + post_url_alts);
 		
 		try { 
-			String post_url_str = post_url_alts.remove(0);
+			String post_url_str = post_url_alts.get(0);
 			URL post_url = new URL(post_url_str);
 			httpcon = (HttpURLConnection) (post_url.openConnection());
 
@@ -779,13 +779,14 @@ public abstract class SolrDocJSON implements Serializable {
 				System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
 
 				String prev_post_url_str = post_url_str;
-
+				post_url_alts.remove(0);
+				
 				boolean retry_successful = false;
 
 				while (post_url_alts.size()>0) {
 					System.out.println("Warning: HTTP_UNAVAILABLE (response code: "+response_code+") connecting to "+post_url_str);
 
-					post_url_str = post_url_alts.remove(0);
+					post_url_str = post_url_alts.get(0);
 					post_url = new URL(post_url_str);
 
 					long random_msec = (long) (2000 + (2000 * Math.random())); // 2-4 secs delay
@@ -811,6 +812,7 @@ public abstract class SolrDocJSON implements Serializable {
 					}
 
 					prev_post_url_str = post_url_str;
+					post_url_alts.remove(0);
 				}
 
 				if (retry_successful) {
@@ -896,7 +898,7 @@ public abstract class SolrDocJSON implements Serializable {
 				
 				int status = response_header_json.getInt("status");
 				if (status != 0) {
-					System.err.println("Warning: POST request to " + post_url + " returned status " + status);
+					System.err.println("Warning: POST request to " + post_url_alts.get(0) + " returned status " + status);
 					System.err.println("Full response was: " + sb);
 				}
 			}
