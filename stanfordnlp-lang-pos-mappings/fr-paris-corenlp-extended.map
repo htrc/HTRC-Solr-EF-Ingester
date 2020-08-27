@@ -40,6 +40,10 @@ N	NOUN
 C	CONJ
 CL	PRON
 
+# From empirical testing, also found
+PUNC	.
+.$$.	.
+
 
 ####
 # Appendix: Notes on trying to figure out what POS tag set Stanford CoreNLP was using
