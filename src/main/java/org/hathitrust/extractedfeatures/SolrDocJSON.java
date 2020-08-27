@@ -754,7 +754,6 @@ public abstract class SolrDocJSON implements Serializable {
 			}
 		}
 		
-		System.err.println("**** generateRandomRetrySolrEnpoints() returning: " + solr_url_alts);
 		return solr_url_alts;
 	}
 	
@@ -784,7 +783,7 @@ public abstract class SolrDocJSON implements Serializable {
 		}
 		
 		if (httpcon != null) {
-			//httpcon.setDoInput(true);	
+			httpcon.setDoInput(true);	
 			httpcon.setDoOutput(true);			
 
 			// Basic Realm authentication based on:
@@ -839,84 +838,60 @@ public abstract class SolrDocJSON implements Serializable {
 			}
 		}
 	
-		
 		return httpcon;
 	}
 	
 	protected static HttpURLConnection postSolrDocWithRetries(ArrayList<String> post_url_alts, String solr_add_doc_json_str)
 	{
 		HttpURLConnection successful_httpcon = null;
-		
-		System.err.println("****** openConnectionWithRetries() post_url_alts = " + post_url_alts);
-		
-		//try { 
-			int num_attempts = post_url_alts.size();
-			
-			String first_post_url_str = post_url_alts.get(0);
-			HttpURLConnection first_httpcon = postSolrDocSetHeadersAndSendInput(first_post_url_str, solr_add_doc_json_str);
-			
-			if (first_httpcon == null) {
-				//System.err.println("Warning: HTTP_UNAVAILABLE (response code: "+first_response_code+") connecting to "+first_post_url_str);
-				//first_httpcon.disconnect();
-				
-				String prev_post_url_str = first_post_url_str;
+	
+		int num_attempts = post_url_alts.size();
+
+		String first_post_url_str = post_url_alts.get(0);
+		HttpURLConnection first_httpcon = postSolrDocSetHeadersAndSendInput(first_post_url_str, solr_add_doc_json_str);
+
+		if (first_httpcon == null) {
+
+			String prev_post_url_str = first_post_url_str;
+			post_url_alts.remove(0);
+
+			while (post_url_alts.size()>0) {
+
+				String alt_post_url_str = post_url_alts.get(0);
+
+				long random_msec = (long) (2000 + (2000 * Math.random())); // 2-4 secs delay
+				String mess = "         Sleeping for "+random_msec+" msecs, then trying again";
+				if (!alt_post_url_str.equals(prev_post_url_str)) {
+					mess += " (with different Solr endpoint)";
+				}
+				System.out.println(mess);
+
+				try {
+					Thread.sleep(random_msec);
+				}
+				catch (InterruptedException e) {
+					e.printStackTrace();
+					break;
+				}
+				HttpURLConnection alt_httpcon = postSolrDocSetHeadersAndSendInput(alt_post_url_str,solr_add_doc_json_str);
+
+				if (alt_httpcon != null) {
+					successful_httpcon = alt_httpcon;
+					break;
+				}
+
+				prev_post_url_str = alt_post_url_str;
 				post_url_alts.remove(0);
-				
-				//boolean retry_successful = false;
-
-				while (post_url_alts.size()>0) {
-				
-					String alt_post_url_str = post_url_alts.get(0);
-					
-					long random_msec = (long) (2000 + (2000 * Math.random())); // 2-4 secs delay
-					String mess = "         Sleeping for "+random_msec+" msecs, then trying again";
-					if (!alt_post_url_str.equals(prev_post_url_str)) {
-						mess += " (with different Solr endpoint)";
-					}
-					System.out.println(mess);
-
-					try {
-						Thread.sleep(random_msec);
-					}
-					catch (InterruptedException e) {
-						e.printStackTrace();
-						break;
-					}
-					HttpURLConnection alt_httpcon = postSolrDocSetHeadersAndSendInput(alt_post_url_str,solr_add_doc_json_str);
-					
-					//int alt_response_code = alt_httpcon.getResponseCode();
-					//if (alt_response_code == HttpURLConnection.HTTP_OK) {
-						
-					if (alt_httpcon != null) {
-						successful_httpcon = alt_httpcon;
-						//retry_successful = true;
-						break;
-					}
-
-					//System.out.println("Warning: HTTP_UNAVAILABLE (response code: "+alt_response_code+") connecting to "+alt_post_url_str);
-					//alt_httpcon.disconnect();
-					
-					prev_post_url_str = alt_post_url_str;
-					post_url_alts.remove(0);
-				}
-
-				if (successful_httpcon == null) {
-
-					System.err.println("Error: Failed to post JSON document to Solr-endpoint, after "+num_attempts+" attempts");
-				}
 			}
-			else {
-				successful_httpcon = first_httpcon;
+
+			if (successful_httpcon == null) {
+
+				System.err.println("Error: Failed to post JSON document to Solr-endpoint, after "+num_attempts+" attempts");
 			}
-		//}
-		/*
-		catch (MalformedURLException e) {
-			e.printStackTrace();
 		}
-		catch (IOException e) {
-			e.printStackTrace();
+		else {
+			successful_httpcon = first_httpcon;
 		}
-		*/
 		
 		return successful_httpcon;
 	}
@@ -930,76 +905,46 @@ public abstract class SolrDocJSON implements Serializable {
 		//curl_popen += " --data-binary '";
 		//curl_popen += "'"
 
+		HttpURLConnection httpcon = postSolrDocWithRetries(post_url_alts, solr_add_doc_json_str);
 
-	        // System.out.println("Post URL: " + post_url);
-		
-		// Consider breaking into version with support method to create connection, along
-		// similar lines to:
-		//   https://codereview.stackexchange.com/questions/45819/httpurlconnection-response-code-handling
-		
-		//try {		
-			HttpURLConnection httpcon = postSolrDocWithRetries(post_url_alts, solr_add_doc_json_str);
-			
-			// httpcon.connect();
-/*
-			byte[] outputBytes = solr_add_doc_json_str.getBytes("UTF-8");
-			OutputStream os = httpcon.getOutputStream();
-			os.write(outputBytes);
-			os.close();
-	*/		
-			
-			if (httpcon != null) {
-				// Read response
-				StringBuilder sb = new StringBuilder();
-				try {
-					InputStream is = httpcon.getInputStream();
-					BufferedReader in = new BufferedReader(new InputStreamReader(is));
-					String decodedString;
-					while ((decodedString = in.readLine()) != null) {
-						sb.append(decodedString);
-					}
-					in.close();
-				} 
-				catch (IOException e) {
-					System.err.println("Solr core update failed when processing id: " + info_page_id);
-					System.err.println("Solr Doc posted for ingest was:\n" + solr_add_doc_json_str);
-
-					e.printStackTrace();
+		if (httpcon != null) {
+			// Read response
+			StringBuilder sb = new StringBuilder();
+			try {
+				InputStream is = httpcon.getInputStream();
+				BufferedReader in = new BufferedReader(new InputStreamReader(is));
+				String decodedString;
+				while ((decodedString = in.readLine()) != null) {
+					sb.append(decodedString);
 				}
-				//httpcon.disconnect();
+				in.close();
+			} 
+			catch (IOException e) {
+				System.err.println("Solr core update failed when processing id: " + info_page_id);
+				System.err.println("Solr Doc posted for ingest was:\n" + solr_add_doc_json_str);
 
-				JSONObject solr_status_json = new JSONObject(sb.toString());
+				e.printStackTrace();
+			}
 
-				if (!solr_status_json.isNull("responseHeader")) {
-					JSONObject response_header_json = solr_status_json.getJSONObject("responseHeader");
+			JSONObject solr_status_json = new JSONObject(sb.toString());
 
-					int status = response_header_json.getInt("status");
-					if (status != 0) {
-						System.err.println("Warning: POST request to " + post_url_alts.get(0) + " returned status " + status);
-						System.err.println("Full response was: " + sb);
-					}
-				}
-				else {
-					System.err.println("Failed response to Solr POST: " + sb);
+			if (!solr_status_json.isNull("responseHeader")) {
+				JSONObject response_header_json = solr_status_json.getJSONObject("responseHeader");
+
+				int status = response_header_json.getInt("status");
+				if (status != 0) {
+					System.err.println("Warning: POST request to " + post_url_alts.get(0) + " returned status " + status);
+					System.err.println("Full response was: " + sb);
 				}
 			}
 			else {
-			    System.err.println("Solr core update failed when processing id: " + info_page_id);
-		        System.err.println("Solr Doc posted for ingest was:\n" + solr_add_doc_json_str);
+				System.err.println("Failed response to Solr POST: " + sb);
 			}
-			
-			
-		/*}
-		catch (IOException e) {
-		        System.err.println("Solr core update failed when processing id: " + info_page_id);
-		        System.err.println("Solr Doc posted for ingest was:\n" + solr_add_doc_json_str);
-		        
-		        e.printStackTrace();
 		}
-
-		catch (Exception e) {
-			e.printStackTrace();
-		}*/
+		else {
+			System.err.println("Solr core update failed when processing id: " + info_page_id);
+			System.err.println("Solr Doc posted for ingest was:\n" + solr_add_doc_json_str);
+		}
 	}
 
 	public static void postSolrDoc(ArrayList<String> post_url_alts, JSONObject solr_add_doc_json,
