@@ -38,7 +38,8 @@ import org.apache.lucene.analysis.core.LowerCaseFilter;
 public abstract class SolrDocJSON implements Serializable {
 
 	public final static int NUM_ALT_RETRIES = 10;
-	
+	protected final static int COMMIT_WITHIN = 120000; // used to be 60000, and before that 5000
+	 
 	protected String [] metadata_single_string = null;
 	protected String [] metadata_multiple = null;
 
@@ -63,7 +64,7 @@ public abstract class SolrDocJSON implements Serializable {
 			
 			JSONObject solr_doc_json = generateMetadataSolrDocJSON(volume_id,ef_metadata,false);
 			
-			solr_add_json.put("commitWithin", 60000); // used to be 5000
+			solr_add_json.put("commitWithin", COMMIT_WITHIN);
 			solr_add_json.put("doc", solr_doc_json);
 
 			solr_update_json = new JSONObject();
@@ -424,7 +425,7 @@ public abstract class SolrDocJSON implements Serializable {
 	protected static JSONObject explicitCommitWithin()
 	{
 		JSONObject solr_add_json = new JSONObject();	
-		solr_add_json.put("commitWithin", 60000); // used to be 5000
+		solr_add_json.put("commitWithin", COMMIT_WITHIN);
 		
 		JSONObject solr_update_json = new JSONObject();
 	
@@ -465,7 +466,7 @@ public abstract class SolrDocJSON implements Serializable {
 					else {
 						solr_doc_json.put("efnotext_b", true);
 					}
-					solr_add_json.put("commitWithin", 60000); // used to be 5000
+					solr_add_json.put("commitWithin", COMMIT_WITHIN);
 					solr_add_json.put("doc", solr_doc_json);
 					
 					solr_update_json = new JSONObject();
@@ -628,7 +629,7 @@ public abstract class SolrDocJSON implements Serializable {
 			update_field_keys.put(vol_update_field_keys_del);
 			update_field_keys.put(vol_update_field_keys_add);
 			
-			//solr_add_json.put("commitWithin", 60000); // used to be 5000
+			//solr_add_json.put("commitWithin", COMMIT_WITHIN); 
 		}
 		
 		return update_field_keys;
