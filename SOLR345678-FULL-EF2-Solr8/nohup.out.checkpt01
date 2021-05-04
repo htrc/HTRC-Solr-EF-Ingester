@@ -1,0 +1,169 @@
+Set Environment Variable SOLR_NODES to: solr3.ischool.illinois.edu:9983
+****
+* Replicating collection:   solr345678-faceted-htrc-full-ef2-shards24x2
+* With Solr configset:      htrc-configs-docvals
+* Through Solr endpoint:    http://solr1-s/robust-solr8/admin
+****
+Mon Sep 28 21:04:34 CDT 2020
+**** one time fix: Sleeping for 1 hour ...
+Mon Sep 28 22:04:34 CDT 2020
+wget --auth-no-challenge --http-user=admin --http-passwd=Wa!kat0 http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard8&node=solr6:9986_solr -O -
+--2020-09-28 22:04:34--  http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard8&node=solr6:9986_solr
+Resolving solr1-s (solr1-s)... 192.168.129.112
+Connecting to solr1-s (solr1-s)|192.168.129.112|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 247 [application/json]
+Saving to: ‘STDOUT’
+{
+  "responseHeader":{
+    "status":0,
+    "QTime":16785},
+  "success":{
+    "solr6:9986_solr":{
+      "responseHeader":{
+        "status":0,
+        "QTime":14196},
+      "core":"solr345678-faceted-htrc-full-ef2-shards24x2_shard8_replica_n53"}}}
+
+     0K                                                       100% 34.3M=0s
+
+2020-09-28 22:04:51 (34.3 MB/s) - written to stdout [247/247]
+
+========
+Mon Sep 28 22:04:51 CDT 2020
+Sleeping for 1 hour ...
+Mon Sep 28 23:04:51 CDT 2020
+========
+wget --auth-no-challenge --http-user=admin --http-passwd=Wa!kat0 http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard7&node=solr6:9986_solr -O -
+--2020-09-28 23:04:51--  http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard7&node=solr6:9986_solr
+Resolving solr1-s (solr1-s)... 192.168.129.112
+Connecting to solr1-s (solr1-s)|192.168.129.112|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 245 [application/json]
+Saving to: ‘STDOUT’
+{
+  "responseHeader":{
+    "status":0,
+    "QTime":2795},
+  "success":{
+    "solr6:9986_solr":{
+      "responseHeader":{
+        "status":0,
+        "QTime":2564},
+      "core":"solr345678-faceted-htrc-full-ef2-shards24x2_shard7_replica_n55"}}}
+
+     0K                                                       100% 27.3M=0s
+
+2020-09-28 23:04:53 (27.3 MB/s) - written to stdout [245/245]
+
+========
+Mon Sep 28 23:04:53 CDT 2020
+Sleeping for 1 hour ...
+Tue Sep 29 00:04:53 CDT 2020
+========
+wget --auth-no-challenge --http-user=admin --http-passwd=Wa!kat0 http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard13&node=solr6:9986_solr -O -
+--2020-09-29 00:04:53--  http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard13&node=solr6:9986_solr
+Resolving solr1-s (solr1-s)... 192.168.129.112
+Connecting to solr1-s (solr1-s)|192.168.129.112|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 246 [application/json]
+Saving to: ‘STDOUT’
+{
+  "responseHeader":{
+    "status":0,
+    "QTime":1942},
+  "success":{
+    "solr6:9986_solr":{
+      "responseHeader":{
+        "status":0,
+        "QTime":1596},
+      "core":"solr345678-faceted-htrc-full-ef2-shards24x2_shard13_replica_n57"}}}
+
+     0K                                                       100% 31.1M=0s
+
+2020-09-29 00:04:55 (31.1 MB/s) - written to stdout [246/246]
+
+========
+Tue Sep 29 00:04:55 CDT 2020
+Sleeping for 1 hour ...
+Tue Sep 29 01:04:55 CDT 2020
+========
+wget --auth-no-challenge --http-user=admin --http-passwd=Wa!kat0 http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard18&node=solr6:9986_solr -O -
+--2020-09-29 01:04:55--  http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard18&node=solr6:9986_solr
+Resolving solr1-s (solr1-s)... 192.168.129.112
+Connecting to solr1-s (solr1-s)|192.168.129.112|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 246 [application/json]
+Saving to: ‘STDOUT’
+{
+  "responseHeader":{
+    "status":0,
+    "QTime":1404},
+  "success":{
+    "solr6:9986_solr":{
+      "responseHeader":{
+        "status":0,
+        "QTime":1044},
+      "core":"solr345678-faceted-htrc-full-ef2-shards24x2_shard18_replica_n59"}}}
+
+     0K                                                       100% 33.0M=0s
+
+2020-09-29 01:04:57 (33.0 MB/s) - written to stdout [246/246]
+
+========
+Tue Sep 29 01:04:57 CDT 2020
+Sleeping for 1 hour ...
+Tue Sep 29 02:04:57 CDT 2020
+========
+wget --auth-no-challenge --http-user=admin --http-passwd=Wa!kat0 http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard16&node=solr6:9986_solr -O -
+--2020-09-29 02:04:57--  http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard16&node=solr6:9986_solr
+Resolving solr1-s (solr1-s)... 192.168.129.112
+Connecting to solr1-s (solr1-s)|192.168.129.112|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 246 [application/json]
+Saving to: ‘STDOUT’
+{
+  "responseHeader":{
+    "status":0,
+    "QTime":6362},
+  "success":{
+    "solr6:9986_solr":{
+      "responseHeader":{
+        "status":0,
+        "QTime":6136},
+      "core":"solr345678-faceted-htrc-full-ef2-shards24x2_shard16_replica_n61"}}}
+
+     0K                                                       100% 28.2M=0s
+
+2020-09-29 02:05:03 (28.2 MB/s) - written to stdout [246/246]
+
+========
+Tue Sep 29 02:05:03 CDT 2020
+Sleeping for 1 hour ...
+Tue Sep 29 03:05:03 CDT 2020
+========
+wget --auth-no-challenge --http-user=admin --http-passwd=Wa!kat0 http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard23&node=solr6:9986_solr -O -
+--2020-09-29 03:05:03--  http://solr1-s/robust-solr8/admin/collections?action=ADDREPLICA&collection=solr345678-faceted-htrc-full-ef2-shards24x2&shard=shard23&node=solr6:9986_solr
+Resolving solr1-s (solr1-s)... 192.168.129.112
+Connecting to solr1-s (solr1-s)|192.168.129.112|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 246 [application/json]
+Saving to: ‘STDOUT’
+{
+  "responseHeader":{
+    "status":0,
+    "QTime":3590},
+  "success":{
+    "solr6:9986_solr":{
+      "responseHeader":{
+        "status":0,
+        "QTime":3282},
+      "core":"solr345678-faceted-htrc-full-ef2-shards24x2_shard23_replica_n63"}}}
+
+     0K                                                       100% 33.6M=0s
+
+2020-09-29 03:05:07 (33.6 MB/s) - written to stdout [246/246]
+
+========
+Tue Sep 29 03:05:07 CDT 2020
+Sleeping for 1 hour ...
